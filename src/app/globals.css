@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   Design tokens. Change a colour here and it changes everywhere, including
+   Tailwind classes, which reference these same values.
+   ========================================================================== */
+:root {
+  --onyx: #120d0a;
+  --ink: #241c15;
+  --maroon: #8a2226;
+  --maroon-deep: #5a0f12;
+  --gold: #c9a24b;
+  --gold-bright: #9c6f2e;
+  --cream: #f7f0de;
+  --peach: #e7d3b1;
+  --beige: #efe3cb;
+  --beige-deep: #e8dabe;
+  --paper: #fcf8ef;
+  --muted: rgba(36, 28, 21, 0.6);
+  --line: rgba(36, 28, 21, 0.12);
+  --line-gold: rgba(201, 162, 75, 0.42);
+
+  /* Jaali lattice. Deliberately at ~0.05 alpha — it should register as warmth
+     in the beige, not as a visible pattern. Raise cautiously. */
+  --jaali: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxNTAnIGhlaWdodD0nMTUwJyB2aWV3Qm94PScwIDAgMTUwIDE1MCc+CjxnIGZpbGw9J25vbmUnIHN0cm9rZT0nI0E5NzYyRicgc3Ryb2tlLXdpZHRoPScwLjknIG9wYWNpdHk9JzAuMDU1Jz4KPGNpcmNsZSBjeD0nMCcgY3k9JzAnIHI9Jzc1LjAnLz48Y2lyY2xlIGN4PScxNTAnIGN5PScwJyByPSc3NS4wJy8+CjxjaXJjbGUgY3g9JzAnIGN5PScxNTAnIHI9Jzc1LjAnLz48Y2lyY2xlIGN4PScxNTAnIGN5PScxNTAnIHI9Jzc1LjAnLz4KPGNpcmNsZSBjeD0nNzUuMCcgY3k9Jzc1LjAnIHI9Jzc1LjAnLz4KPC9nPgo8ZyBmaWxsPSdub25lJyBzdHJva2U9JyM4RTVCMjInIHN0cm9rZS13aWR0aD0nMC45JyBvcGFjaXR5PScwLjA0NSc+CjxwYXRoIGQ9J003NS4wIDU2LjAgTDk0LjAgNzUuMCBMNzUuMCA5NC4wIEw1Ni4wIDc1LjAgWicvPgo8cGF0aCBkPSdNMCAtMTkgTDE5IDAgTDAgMTkgTC0xOSAwIFonLz4KPHBhdGggZD0nTTE1MCAtMTkgTDE2OSAwIEwxNTAgMTkgTDEzMSAwIFonLz4KPHBhdGggZD0nTTAgMTMxIEwxOSAxNTAgTDAgMTY5IEwtMTkgMTUwIFonLz4KPHBhdGggZD0nTTE1MCAxMzEgTDE2OSAxNTAgTDE1MCAxNjkgTDEzMSAxNTAgWicvPgo8L2c+CjxnIGZpbGw9JyNBOTc2MkYnIG9wYWNpdHk9JzAuMDU1Jz4KPGNpcmNsZSBjeD0nNzUuMCcgY3k9JzAnIHI9JzIuMScvPjxjaXJjbGUgY3g9JzAnIGN5PSc3NS4wJyByPScyLjEnLz4KPGNpcmNsZSBjeD0nMTUwJyBjeT0nNzUuMCcgcj0nMi4xJy8+PGNpcmNsZSBjeD0nNzUuMCcgY3k9JzE1MCcgcj0nMi4xJy8+CjxjaXJjbGUgY3g9Jzc1LjAnIGN5PSc3NS4wJyByPScyLjQnLz4KPC9nPgo8L3N2Zz4=");
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: var(--beige);
+    background-image: var(--jaali),
+      radial-gradient(ellipse 900px 520px at 8% -6%, rgba(186, 138, 74, 0.13), transparent 62%),
+      radial-gradient(ellipse 720px 520px at 102% 18%, rgba(201, 162, 75, 0.11), transparent 62%),
+      radial-gradient(ellipse 820px 620px at 18% 105%, rgba(186, 138, 74, 0.12), transparent 62%);
+    background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+    background-size: 150px 150px, auto, auto, auto;
+    background-attachment: fixed;
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-serif), Georgia, serif;
+    font-weight: 500;
+    line-height: 1.14;
+    letter-spacing: 0.005em;
+  }
+
+  ::selection { background: var(--gold); color: var(--onyx); }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+}
+
+@layer components {
+  .wrap { @apply mx-auto w-full max-w-wrap px-[clamp(18px,4vw,48px)]; }
+
+  /* Vertical rhythm. One number to tune the whole page's breathing room. */
+  .section { @apply py-[clamp(32px,4.2vw,60px)]; }
+
+  .eyebrow {
+    @apply text-[11px] font-bold uppercase tracking-[0.24em] text-gold;
+  }
+
+  .btn {
+    @apply inline-flex min-h-[48px] items-center justify-center gap-[9px]
+           rounded-[2px] px-8 py-[15px] text-[11.5px] font-bold uppercase
+           tracking-[0.16em] transition-colors duration-200;
+  }
+  .btn-ink   { @apply bg-ink text-cream hover:bg-maroon hover:text-white; }
+  .btn-line  { @apply border border-ink text-ink hover:bg-ink hover:text-cream; }
+  .btn-gold  { @apply bg-gold text-onyx hover:bg-gold-bright; }
+
+  /* The Mughal arch frame used on the hero triptych and category tiles. */
+  .arch-frame {
+    @apply relative overflow-hidden rounded-arch border border-gold;
+    box-shadow: 0 0 0 6px var(--paper), 0 0 0 7px var(--line-gold),
+      0 22px 50px rgba(122, 35, 51, 0.14);
+  }
+
+  /* Scalloped gold-foil edge, used at the top of the footer. */
+  .scallop {
+    height: 14px;
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyNCcgaGVpZ2h0PScxNCcgdmlld0JveD0nMCAwIDI0IDE0Jz4KPHBhdGggZD0nTTAgMS42IEgyNCcgc3Ryb2tlPScjQzlBMjRCJyBzdHJva2Utd2lkdGg9JzEnIGZpbGw9J25vbmUnIG9wYWNpdHk9JzAuNTUnLz4KPHBhdGggZD0nTTAgMiBRNiAyMiAxMiAyIFExOCAyMiAyNCAyJyBmaWxsPSdub25lJyBzdHJva2U9JyNDOUEyNEInIHN0cm9rZS13aWR0aD0nMS4zNScvPgo8L3N2Zz4=");
+    background-repeat: repeat-x;
+    background-size: 24px 14px;
+  }
+
+  .card-surface {
+    @apply overflow-hidden rounded-[2px] border bg-paper transition-shadow duration-300;
+    border-color: var(--line);
+  }
+}
+
+/* Scroll reveal, driven by src/components/ui/Reveal.tsx */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.3, 1),
+    transform 0.7s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.reveal.show { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  html { scroll-behavior: auto; }
+}

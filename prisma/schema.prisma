@@ -1,0 +1,460 @@
+// =============================================================================
+// Shehnai — data model
+// -----------------------------------------------------------------------------
+// Money is stored as INTEGER PAISE everywhere (₹1,899 -> 189900). Never floats.
+// Razorpay also speaks paise, so no conversion is needed at the payment boundary.
+// Use `formatINR()` from src/lib/money.ts for display.
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------------------------------------------------------- taxonomy --
+
+/// Top-level house: Men's, Women's, Murti Sringaar, Wedding/Swagat.
+/// A table rather than an enum so a fifth vertical can be added from the admin
+/// panel without a migration.
+model Vertical {
+  id          String     @id @default(cuid())
+  slug        String     @unique // "mens", "murti"
+  name        String // "Murti Sringaar"
+  devName     String? // "ठाकुरजी शृंगार"
+  description String?
+  bannerUrl   String? // 1920x640
+  iconKey     String? // maps to an inline SVG in src/components/ui/VerticalIcon
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  categories  Category[]
+  products    Product[]
+  banners     Banner[]
+
+  @@index([isActive, sortOrder])
+}
+
+/// Sub-category within a vertical: Mala, Kalgi, Brooches, Pendant Set...
+model Category {
+  id         String    @id @default(cuid())
+  slug       String // "mala" — unique per vertical, not globally
+  name       String
+  devName    String?
+  verticalId String
+  vertical   Vertical  @relation(fields: [verticalId], references: [id], onDelete: Cascade)
+  bannerUrl  String?
+  sortOrder  Int       @default(0)
+  isActive   Boolean   @default(true)
+  products   Product[]
+
+  @@unique([verticalId, slug])
+  @@index([verticalId, sortOrder])
+}
+
+// ---------------------------------------------------------------- catalogue --
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum Badge {
+  NONE
+  NEW
+  BEST
+  LIMITED
+  SALE
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  name        String
+  devName     String?
+  description String        @db.Text
+  story       String?       @db.Text // longer editorial copy for the PDP
+  verticalId  String
+  vertical    Vertical      @relation(fields: [verticalId], references: [id])
+  categoryId  String?
+  category    Category?     @relation(fields: [categoryId], references: [id])
+
+  // Spec sheet — shown as the "Details" table on the product page
+  material    String?
+  dimensions  String? // "6 × 4.4 cm"
+  weightGrams Int?
+  closure     String? // "Safety-lock pin"
+  careNotes   String?       @db.Text
+
+  status      ProductStatus @default(DRAFT)
+  badge       Badge         @default(NONE)
+  isFeatured  Boolean       @default(false)
+  sortOrder   Int           @default(0)
+
+  ratingAvg   Float         @default(0)
+  reviewCount Int           @default(0)
+
+  metaTitle       String?
+  metaDescription String?
+
+  variants     ProductVariant[]
+  images       ProductImage[]
+  reviews      Review[]
+  homeSections HomeSection[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, verticalId])
+  @@index([status, isFeatured])
+  @@index([status, badge])
+}
+
+/// Stock and price live on the VARIANT, never on the product. A mala offered in
+/// two chain lengths is two variants = two SKUs = two stock lines. Products with
+/// no real options still get exactly one variant, flagged isDefault.
+model ProductVariant {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  sku         String  @unique // SHN-MEN-BRC-0042
+  optionName  String? // "Finish"
+  optionValue String? // "Antique Gold"
+  barcode     String?
+
+  pricePaise Int // selling price
+  mrpPaise   Int  @default(0) // 0 = no strike-through shown
+  costPaise  Int? // buy price, admin-only, drives margin reporting
+
+  // --- inventory ---------------------------------------------------------
+  /// Physical units on the shelf.
+  stockQty     Int     @default(0)
+  /// Units promised to unpaid/unshipped orders. Available = stockQty - reservedQty.
+  reservedQty  Int     @default(0)
+  /// Dashboard flags the variant at or below this number.
+  lowStockAt   Int     @default(5)
+  /// Suggested restock trigger for purchase planning.
+  reorderPoint Int     @default(10)
+  supplier     String?
+
+  isDefault Boolean @default(false)
+  isActive  Boolean @default(true)
+
+  movements  StockMovement[]
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([stockQty])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String // 2000x2000 Cloudinary original; sizes derived on the fly
+  alt       String  @default("")
+  width     Int     @default(2000)
+  height    Int     @default(2000)
+  /// true = real studio photograph, false = concept render. Drives the card tag.
+  isStudioPhoto Boolean @default(false)
+  sortOrder     Int     @default(0)
+
+  @@index([productId, sortOrder])
+}
+
+// ---------------------------------------------------------------- inventory --
+
+enum StockReason {
+  PURCHASE // goods received from karigar/supplier
+  SALE // order paid
+  RETURN // customer sent it back
+  DAMAGE // written off
+  ADJUSTMENT // manual correction
+  STOCKTAKE // physical count reconciliation
+  RESERVE // held for an unpaid order
+  RELEASE // reservation cancelled
+}
+
+/// Append-only ledger. The stockQty column is the running total; this table is
+/// the audit trail explaining how it got there. Never edit a movement — write a
+/// compensating one. Always mutate stock via `applyStockMovement()` in
+/// src/lib/inventory.ts so the two stay in step inside one transaction.
+model StockMovement {
+  id        String         @id @default(cuid())
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  /// Signed: +12 received, -1 sold.
+  delta     Int
+  reason    StockReason
+  note      String?
+  /// Order number, invoice number, stocktake id — whatever ties it to reality.
+  reference String?
+  createdBy String?
+  createdAt DateTime       @default(now())
+
+  @@index([variantId, createdAt])
+  @@index([reason, createdAt])
+}
+
+// ------------------------------------------------------- editable content --
+
+enum BannerPlacement {
+  HOME_HERO // 2400x1000 desktop / 1080x1350 mobile
+  HOME_TRIPTYCH // 900x1200, exactly 3 active
+  CATEGORY_HEADER // 1920x640, needs verticalId
+  PROMO_STRIP // text only
+}
+
+/// Everything visual the admin can swap without a deploy.
+model Banner {
+  id         String          @id @default(cuid())
+  placement  BannerPlacement
+  title      String?
+  subtitle   String?
+  desktopUrl String?
+  mobileUrl  String?
+  alt        String          @default("")
+  href       String?
+  ctaLabel   String?
+  verticalId String?
+  vertical   Vertical?       @relation(fields: [verticalId], references: [id])
+  sortOrder  Int             @default(0)
+  startsAt   DateTime?
+  endsAt     DateTime?
+  isActive   Boolean         @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([placement, isActive, sortOrder])
+}
+
+enum HomeSectionKind {
+  EDITORIAL // image cluster + story, e.g. "The Flagship Piece"
+  STATEMENT // centred pull-quote
+  PRODUCT_RAIL // grid or carousel driven by a query
+  CATEGORY_TILES
+  REVIEWS
+  TRUST
+  NEWSLETTER
+}
+
+/// "The Flagship Piece", "The Bridal Edit" and friends. These are rows, not
+/// hardcoded JSX — the admin edits copy, swaps the linked product, reorders or
+/// hides them entirely.
+model HomeSection {
+  id       String          @id @default(cuid())
+  key      String          @unique // "flagship-piece"
+  kind     HomeSectionKind
+  eyebrow  String? // "The Flagship Piece"
+  heading  String?
+  body     String?         @db.Text
+  ctaLabel String?
+  ctaHref  String?
+
+  /// Featured product for EDITORIAL blocks.
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+
+  mediaUrl String? // 1200x1500 main frame
+  miniUrls String[] @default([]) // two 800x800 thumbs
+
+  /// Free-form extras: swatch chips, secondary CTA, rail query.
+  /// e.g. { "swatches": [{"label":"Antique Brass","hex":"#C9A24B"}] }
+  config Json?
+
+  /// EDITORIAL only: flips the image to the right.
+  reversed  Boolean @default(false)
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name        String
+  city        String?
+  title       String?
+  body        String   @db.Text
+  rating      Int      @default(5)
+  isPublished Boolean  @default(false)
+  isFeatured  Boolean  @default(false) // shows in the homepage rail
+  createdAt   DateTime @default(now())
+
+  @@index([isPublished, isFeatured])
+}
+
+// ------------------------------------------------------------------ orders --
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PACKED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  RETURNED
+}
+
+enum PaymentMethod {
+  RAZORPAY
+  COD
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  phone     String?
+  name      String?
+  orders    Order[]
+  addresses Address[]
+  createdAt DateTime  @default(now())
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  name       String
+  phone      String
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  pincode    String
+  country    String   @default("India")
+  isDefault  Boolean  @default(false)
+}
+
+model Order {
+  id          String   @id @default(cuid())
+  /// Human-facing: SHN-2607-0031
+  orderNumber String   @unique
+  customerId  String?
+  customer    Customer? @relation(fields: [customerId], references: [id])
+
+  email String
+  phone String
+
+  status        OrderStatus   @default(PENDING)
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus @default(PENDING)
+
+  subtotalPaise Int
+  discountPaise Int @default(0)
+  shippingPaise Int @default(0)
+  totalPaise    Int
+
+  couponCode String?
+
+  razorpayOrderId   String? @unique
+  razorpayPaymentId String?
+  razorpaySignature String?
+
+  /// Snapshot at time of order — addresses may be edited later.
+  shippingAddress Json
+  notes           String?
+  trackingNumber  String?
+  carrier         String?
+
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([paymentStatus])
+}
+
+model OrderItem {
+  id        String         @id @default(cuid())
+  orderId   String
+  order     Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variantId String?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+
+  /// Denormalised so the invoice still reads correctly after a rename/delete.
+  productName String
+  variantName String?
+  sku         String
+  imageUrl    String?
+
+  unitPricePaise Int
+  qty            Int
+  lineTotalPaise Int
+
+  @@index([orderId])
+}
+
+enum CouponType {
+  PERCENT
+  FLAT
+}
+
+model Coupon {
+  id             String     @id @default(cuid())
+  code           String     @unique
+  type           CouponType
+  /// PERCENT: 10 = 10%. FLAT: paise.
+  value          Int
+  minOrderPaise  Int        @default(0)
+  maxDiscountPaise Int?
+  usageLimit     Int? // null = unlimited
+  usedCount      Int        @default(0)
+  startsAt       DateTime?
+  endsAt         DateTime?
+  isActive       Boolean    @default(true)
+}
+
+// ------------------------------------------------------------------ system --
+
+enum Role {
+  OWNER
+  ADMIN
+  STAFF
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(STAFF)
+  isActive     Boolean  @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+}
+
+/// Announcement bar text, free-shipping threshold, contact details, social URLs.
+/// Read through src/lib/settings.ts which caches and type-guards them.
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
