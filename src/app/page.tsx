@@ -62,7 +62,7 @@ export default async function HomePage() {
           href: b.href,
         }))}
         heading="The First Note of Every Celebration"
-        sub="Kundan and brass, worked the way they always have been — for the men, the women, and the quiet devotion of a home shrine."
+        sub="Kundan and brass, worked the way they always have been — for men, for women, for weddings, and for the mandir at home."
       />
 
       {editorials[0] && <EditorialSection data={editorials[0]} />}

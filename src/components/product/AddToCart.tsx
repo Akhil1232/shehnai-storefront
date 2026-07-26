@@ -1,14 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/store/cart";
 import { formatINR, discountPercent } from "@/lib/money";
 import type { FullProduct } from "@/types/catalog";
 
 export default function AddToCart({ product }: { product: FullProduct }) {
+  const router = useRouter();
   const [variantId, setVariantId] = useState(product.variants[0]?.id ?? "");
   const [qty, setQty] = useState(1);
   const add = useCart((s) => s.add);
+  const close = useCart((s) => s.close);
 
   const variant = product.variants.find((v) => v.id === variantId) ?? product.variants[0];
   if (!variant) return <p className="text-maroon">Currently unavailable.</p>;
@@ -16,6 +19,17 @@ export default function AddToCart({ product }: { product: FullProduct }) {
   const available = variant.stockQty - variant.reservedQty;
   const off = discountPercent(variant.pricePaise, variant.mrpPaise);
   const hasOptions = product.variants.length > 1;
+
+  const line = {
+    variantId: variant.id,
+    productId: product.id,
+    slug: product.slug,
+    name: product.name,
+    variantName: variant.optionValue,
+    sku: variant.sku,
+    imageUrl: product.images[0]?.url ?? null,
+    pricePaise: variant.pricePaise,
+  };
 
   return (
     <div>
@@ -66,27 +80,23 @@ export default function AddToCart({ product }: { product: FullProduct }) {
         </div>
 
         <button
-          className="btn btn-gold flex-1"
+          className="btn btn-line flex-1"
           disabled={available <= 0}
-          onClick={() =>
-            add(
-              {
-                variantId: variant.id,
-                productId: product.id,
-                slug: product.slug,
-                name: product.name,
-                variantName: variant.optionValue,
-                sku: variant.sku,
-                imageUrl: product.images[0]?.url ?? null,
-                pricePaise: variant.pricePaise,
-              },
-              qty
-            )
-          }
+          onClick={() => add(line, qty)}
         >
           {available <= 0 ? "Sold Out" : "Add to Bag"}
         </button>
       </div>
+
+      {/* Buy Now goes straight to the single-screen checkout — no drawer, no
+          cart page, no review step. */}
+      <button
+        className="btn btn-gold mt-2.5 w-full"
+        disabled={available <= 0}
+        onClick={() => { add(line, qty); close(); router.push("/checkout"); }}
+      >
+        Buy Now
+      </button>
 
       {available > 0 && available <= variant.lowStockAt && (
         <p className="mt-3 text-[12.5px] font-semibold text-maroon">

@@ -31,7 +31,7 @@ export default async function OrderPage({
         {order.paymentMethod === "COD" ? "Cash on Delivery" : "Paid online"}
       </p>
       <p className="mt-1 text-[13.5px] text-[color:var(--muted)]">
-        A confirmation has been sent to {order.email}. Dispatch in 24–48 hours.
+        A confirmation has been sent to {order.email}. Dispatched within 2–3 working days.
       </p>
 
       <div className="mt-10 rounded-[2px] border border-[color:var(--line-gold)] bg-paper p-6 text-left">
@@ -59,6 +59,21 @@ export default async function OrderPage({
           {addr.name}, {addr.line1}{addr.line2 ? `, ${addr.line2}` : ""},<br />
           {addr.city}, {addr.state} {addr.pincode}
         </div>
+      </div>
+
+      <div className="mt-8 rounded-[2px] border border-[color:var(--line-gold)] bg-paper p-5 text-left">
+        <b className="mb-2 block text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink">
+          Please record your unboxing
+        </b>
+        <p className="text-[13px] leading-relaxed text-[color:var(--muted)]">
+          If anything arrives damaged, incorrect or missing, we will replace it — but we need a
+          continuous, unedited video of the parcel being opened. Start recording before you cut
+          the packaging, and keep the shipping label visible. Without it we cannot process a
+          claim.{" "}
+          <Link href="/policies/returns" className="font-semibold text-maroon underline underline-offset-2">
+            Full replacement policy
+          </Link>
+        </p>
       </div>
 
       <Link href="/collections/all" className="btn btn-line mt-8">Continue Shopping</Link>

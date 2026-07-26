@@ -102,6 +102,8 @@ two people buying the same one-of-a-kind piece during a festival rush.
 
 The admin panel will show these inline on each upload field. Until then:
 
+| Logo | already in `public/logo.png` | 1.81:1 | Transparent PNG, 435 × 240 |
+
 | Slot | Size | Ratio | Notes |
 |---|---|---|---|
 | Home hero banner (desktop) | 2400 × 1000 | 2.4:1 | Subject right-of-centre |
@@ -111,7 +113,6 @@ The admin panel will show these inline on each upload field. Until then:
 | Product image | 2000 × 2000 | 1:1 | Min 1200×1200 for zoom. 4–6 per SKU |
 | Editorial main | 1200 × 1500 | 4:5 | |
 | Editorial mini | 800 × 800 | 1:1 | Two per block |
-| Logo | SVG or 800 × 260 | — | Transparent PNG |
 | Social share (OG) | 1200 × 630 | 1.91:1 | |
 
 WebP preferred, under 250 KB each. Upload at full size — Cloudinary and
@@ -179,6 +180,56 @@ Phones get less content and more whitespace on purpose:
 
 The rule of thumb: if an element is decorative rather than informative, it is
 desktop-only. Search for `sm:hidden` and `max-sm:` to find every override.
+
+---
+
+## Not built yet
+
+## Checkout flow
+
+Deliberately short — two taps from a product page to the Razorpay modal:
+
+```
+Product page ──"Buy Now"──────────────► /checkout ──► Razorpay ──► /order/SHN-…
+          └───"Add to Bag"──► drawer ──► /checkout ──► Razorpay ──► /order/SHN-…
+```
+
+There is no address step, no review step and no separate payment page. What
+keeps it fast:
+
+- **Buy Now** skips the bag entirely.
+- **PIN code auto-fills city and state** via `api.postalpincode.in` — two fewer
+  fields, and it catches typos before the parcel is packed.
+- **The address is remembered** in `localStorage`, so a returning customer
+  types nothing.
+- **Order summary is collapsed** by default; quantity is editable inline, so
+  nobody has to go back to the cart.
+- **The pay button is pinned** to the bottom of the screen on mobile with the
+  live total on it.
+
+The `/cart` page still exists for people who want it, but it is no longer part
+of the required path.
+
+---
+
+## Policy pages
+
+Live at `/policies/shipping`, `/policies/returns`, `/policies/privacy` and
+`/policies/terms`, with the text in `src/app/policies/[slug]/page.tsx`.
+
+The stated policy is: **dispatch in 2–3 working days**, and **replacement only**
+for damaged, wrong or missing items, with a **continuous unedited unboxing video
+required** for every claim. No returns, no refunds.
+
+Because that is a strict policy, it is stated *before* payment rather than
+buried: on the product page under the buy box, in the cart drawer, on the cart
+page, on the checkout screen, and again on the order confirmation as a reminder
+to record the unboxing. All of it renders from one component —
+`src/components/ui/PolicyNote.tsx` — so the wording only ever changes in one
+place.
+
+Razorpay will not activate an account until these four pages are live on the
+domain.
 
 ---
 

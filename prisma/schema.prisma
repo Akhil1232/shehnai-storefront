@@ -25,7 +25,7 @@ model Vertical {
   id          String     @id @default(cuid())
   slug        String     @unique // "mens", "murti"
   name        String // "Murti Sringaar"
-  devName     String? // "ठाकुरजी शृंगार"
+  devName     String? // "मूर्ति शृंगार"
   description String?
   bannerUrl   String? // 1920x640
   iconKey     String? // maps to an inline SVG in src/components/ui/VerticalIcon

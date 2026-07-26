@@ -25,8 +25,8 @@ export default function Header({ verticals }: { verticals: NavVertical[] }) {
           <Image
             src="/logo.png"
             alt="Shehnai"
-            width={160}
-            height={48}
+            width={435}
+            height={240}
             priority
             className="h-9 w-auto sm:h-12"
           />

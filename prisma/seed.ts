@@ -30,38 +30,37 @@ const VERTICALS = [
     categories: [
       { slug: "mala", name: "Mala" },
       { slug: "kalgi", name: "Kalgi / Kalangi" },
-      { slug: "brooch", name: "Brooches" },
+      { slug: "brooches", name: "Brooches" },
     ],
   },
   {
     slug: "womens", name: "Women's", devName: "महिला", sortOrder: 2,
-    description: "Necklaces, tikkas, earrings and bracelets for everyday elegance and celebration.",
+    description: "Necklaces, pendant sets, earrings and bracelets for everyday elegance and celebration.",
     categories: [
       { slug: "necklace", name: "Necklace" },
-      { slug: "pendant", name: "Pendant Set" },
-      { slug: "tikka", name: "Maang Tikka" },
+      { slug: "pendant-set", name: "Pendant Set" },
       { slug: "earrings", name: "Earrings" },
       { slug: "bracelet", name: "Bracelet" },
     ],
   },
   {
-    slug: "murti", name: "Murti Sringaar", devName: "ठाकुरजी शृंगार", sortOrder: 3,
-    description: "Stone, pearl and flower haars and brooches sized for idol adornment — daily and festive.",
+    slug: "murti", name: "Murti Sringaar", devName: "मूर्ति शृंगार", sortOrder: 3,
+    description: "Stone, pearl and flower necklaces and brooches sized for idol adornment — daily and festive.",
     categories: [
-      { slug: "stone", name: "Stone Necklace" },
-      { slug: "pearl", name: "Pearl Necklace" },
-      { slug: "flower", name: "Flower Necklace" },
-      { slug: "brooch", name: "Brooches" },
+      { slug: "stone-necklace", name: "Stone Necklace" },
+      { slug: "pearl-necklace", name: "Pearl Necklace" },
+      { slug: "flower-necklace", name: "Flower Necklace" },
+      { slug: "brooches", name: "Brooches" },
     ],
   },
   {
-    slug: "wedding", name: "Wedding · Swagat", devName: "विवाह", sortOrder: 4,
+    slug: "wedding", name: "Wedding", devName: "विवाह", sortOrder: 4,
     description: "Swagat brooches, lapel pins, malas and sets for the groom's welcome and the baraat.",
     categories: [
-      { slug: "brooch", name: "Swagat Brooches" },
-      { slug: "lapel", name: "Swagat Lapel Pin" },
-      { slug: "mala", name: "Swagat Mala" },
-      { slug: "set", name: "Swagat Set" },
+      { slug: "swagat-brooches", name: "Swagat Brooches" },
+      { slug: "swagat-lapel-pin", name: "Swagat Lapel Pin" },
+      { slug: "swagat-mala", name: "Swagat Mala" },
+      { slug: "swagat-set", name: "Swagat Set" },
     ],
   },
 ];
@@ -74,11 +73,11 @@ type SeedProduct = {
 };
 
 const PRODUCTS: SeedProduct[] = [
-  { slug: "stag-wreath-chain-brooch", name: "Stag Wreath Chain Brooch", vertical: "mens", category: "brooch",
+  { slug: "stag-wreath-chain-brooch", name: "Stag Wreath Chain Brooch", vertical: "mens", category: "brooches",
     description: "A triple-chain brooch with an antique-brass stag medallion — the flagship of the men's bench.",
     price: 2499, mrp: 3299, stock: 18, badge: Badge.BEST, featured: true,
     material: "Antique brass, alloy chain", dimensions: "7.2 × 5 cm", weight: 34, closure: "Safety-lock pin" },
-  { slug: "ashoka-kundan-brooch", name: "Ashoka Kundan Brooch", vertical: "mens", category: "brooch",
+  { slug: "ashoka-kundan-brooch", name: "Ashoka Kundan Brooch", vertical: "mens", category: "brooches",
     description: "A compact kundan brooch with three drops — the everyday statement for a bandhgala collar.",
     price: 1899, mrp: 2499, stock: 24, badge: Badge.NEW,
     material: "Alloy, kundan stones, glass drops", dimensions: "6 × 4.4 cm", weight: 22, closure: "Safety-lock pin" },
@@ -94,39 +93,47 @@ const PRODUCTS: SeedProduct[] = [
     description: "A full bridal collar in kundan and emerald-tone stones, with matching drop earrings.",
     price: 6499, mrp: 8999, stock: 7, badge: Badge.BEST, featured: true,
     material: "Alloy, kundan, glass stones", dimensions: "22 cm collar", weight: 180, closure: "Adjustable dori" },
-  { slug: "emerald-maang-tikka", name: "Emerald Maang Tikka", vertical: "womens", category: "tikka",
-    description: "The companion tikka to the bridal collar, with a single emerald-tone centre.",
-    price: 1499, mrp: 1999, stock: 15, featured: true,
-    material: "Alloy, glass stones", dimensions: "8 × 4 cm", weight: 18, closure: "Hair hook" },
+  { slug: "gulab-pendant-set", name: "Gulab Pendant Set", vertical: "womens", category: "pendant-set",
+    description: "A rose-motif pendant with chain and studs, finished in antique gold.",
+    price: 1699, mrp: 2299, stock: 22, featured: true,
+    material: "Alloy, enamel", dimensions: "3.2 cm pendant", weight: 26, closure: "Lobster clasp" },
   { slug: "pearl-drop-earrings", name: "Pearl Drop Earrings", vertical: "womens", category: "earrings",
     description: "Everyday jhumkas with a soft pearl drop, light enough for a full day.",
     price: 899, mrp: 1299, stock: 40, badge: Badge.NEW,
     material: "Alloy, faux pearl", dimensions: "5.5 cm drop", weight: 12, closure: "Push-back" },
-  { slug: "gulab-pendant-set", name: "Gulab Pendant Set", vertical: "womens", category: "pendant",
-    description: "A rose-motif pendant with chain and studs, finished in antique gold.",
-    price: 1699, mrp: 2299, stock: 22,
-    material: "Alloy, enamel", dimensions: "3.2 cm pendant", weight: 26, closure: "Lobster clasp" },
-  { slug: "thakurji-stone-haar", name: "Thakurji Stone Haar", vertical: "murti", category: "stone",
-    description: "A festive stone haar sized for a home idol — bright but not heavy on the murti.",
+  { slug: "kundan-cuff-bracelet", name: "Kundan Cuff Bracelet", vertical: "womens", category: "bracelet",
+    description: "An openable kundan cuff that sits flat against the wrist — festive without being heavy.",
+    price: 2299, mrp: 2999, stock: 16, badge: Badge.NEW,
+    material: "Alloy, kundan stones", dimensions: "6 cm inner diameter", weight: 48, closure: "Hinged clasp" },
+  { slug: "ratna-stone-necklace", name: "Ratna Stone Necklace", vertical: "murti", category: "stone-necklace",
+    description: "A festive stone necklace sized for a home idol — bright, but light enough for daily sringaar.",
     price: 1299, mrp: 1799, stock: 30, badge: Badge.BEST, featured: true,
     material: "Alloy, coloured stones", dimensions: "14 cm drop", weight: 32, closure: "Tie thread" },
-  { slug: "thakurji-pearl-haar", name: "Thakurji Pearl Haar", vertical: "murti", category: "pearl",
-    description: "A double-strand pearl haar for daily sringaar.",
+  { slug: "moti-pearl-necklace", name: "Moti Pearl Necklace", vertical: "murti", category: "pearl-necklace",
+    description: "A double-strand pearl necklace for everyday adornment.",
     price: 999, mrp: 1399, stock: 35, badge: Badge.NEW,
     material: "Faux pearl, alloy", dimensions: "12 cm drop", weight: 24, closure: "Tie thread" },
-  { slug: "thakurji-flower-haar", name: "Thakurji Flower Haar", vertical: "murti", category: "flower",
-    description: "A fabric-flower haar in festival colours, light on the idol and easy to store.",
+  { slug: "pushp-flower-necklace", name: "Pushp Flower Necklace", vertical: "murti", category: "flower-necklace",
+    description: "A fabric-flower necklace in festival colours — light to place and easy to store.",
     price: 749, mrp: 1099, stock: 44,
     material: "Fabric, alloy", dimensions: "15 cm drop", weight: 16, closure: "Tie thread" },
-  { slug: "swagat-groom-brooch", name: "Swagat Groom Brooch", vertical: "wedding", category: "brooch",
+  { slug: "sringaar-mini-brooch-pair", name: "Sringaar Mini Brooch Pair", vertical: "murti", category: "brooches",
+    description: "A pair of small brooches for pinning fabric and drapes neatly in place.",
+    price: 649, mrp: 899, stock: 38,
+    material: "Alloy, stones", dimensions: "2.6 cm each", weight: 10, closure: "Pin fastening" },
+  { slug: "swagat-groom-brooch", name: "Swagat Groom Brooch", vertical: "wedding", category: "swagat-brooches",
     description: "The welcome brooch for baraat morning — bold, photogenic, and pinned in seconds.",
     price: 1599, mrp: 2199, stock: 26, badge: Badge.NEW, featured: true,
     material: "Alloy, kundan", dimensions: "6.8 × 5.2 cm", weight: 30, closure: "Safety-lock pin" },
-  { slug: "swagat-lapel-pin-set", name: "Swagat Lapel Pin Set", vertical: "wedding", category: "lapel",
+  { slug: "swagat-lapel-pin-set", name: "Swagat Lapel Pin Set", vertical: "wedding", category: "swagat-lapel-pin",
     description: "A set of four lapel pins for the groom's party, boxed and ready to gift.",
     price: 1299, mrp: 1799, stock: 20,
     material: "Alloy, enamel", dimensions: "3 cm each", weight: 34, closure: "Butterfly clutch" },
-  { slug: "swagat-complete-set", name: "Swagat Complete Set", vertical: "wedding", category: "set",
+  { slug: "swagat-baraat-mala", name: "Swagat Baraat Mala", vertical: "wedding", category: "swagat-mala",
+    description: "A weighty welcome mala in antique gold, made to photograph well in daylight.",
+    price: 2899, mrp: 3799, stock: 14,
+    material: "Brass beads, alloy", dimensions: "52 cm drop", weight: 120, closure: "Hook clasp" },
+  { slug: "swagat-complete-set", name: "Swagat Complete Set", vertical: "wedding", category: "swagat-set",
     description: "Mala, kalgi and brooch in one box — the whole baraat-morning kit.",
     price: 5499, mrp: 7499, stock: 6, badge: Badge.LIMITED, featured: true,
     material: "Brass, alloy, kundan", dimensions: "Boxed set", weight: 210, closure: "Mixed" },
@@ -158,6 +165,9 @@ async function main() {
 
   // ---- catalogue --------------------------------------------------------
   const seqByCat: Record<string, number> = {};
+  const usedSkus = new Set<string>(
+    (await prisma.productVariant.findMany({ select: { sku: true } })).map((v) => v.sku)
+  );
   for (const [i, p] of PRODUCTS.entries()) {
     const vertical = await prisma.vertical.findUniqueOrThrow({ where: { slug: p.vertical } });
     const category = await prisma.category.findUniqueOrThrow({
@@ -166,7 +176,15 @@ async function main() {
 
     const key = `${p.vertical}:${p.category}`;
     seqByCat[key] = (seqByCat[key] ?? 0) + 1;
-    const sku = buildSku(p.vertical, p.category, seqByCat[key]);
+    let sku = buildSku(p.vertical, p.category, seqByCat[key]);
+
+    // Guard: if two categories ever resolve to the same code, bump until free
+    // rather than failing on the unique constraint.
+    while (usedSkus.has(sku)) {
+      seqByCat[key] += 1;
+      sku = buildSku(p.vertical, p.category, seqByCat[key]);
+    }
+    usedSkus.add(sku);
 
     const product = await prisma.product.upsert({
       where: { slug: p.slug },
@@ -235,7 +253,7 @@ async function main() {
   // sortOrder decides left / CENTRE / right. Murti sits at 1 = the centre panel.
   const triptych = [
     { key: "The Royal Brooch", href: "/product/stag-wreath-chain-brooch", sortOrder: 0 },
-    { key: "The Murti Collection", href: "/collections/murti", sortOrder: 1 },
+    { key: "Murti Sringaar", href: "/collections/murti", sortOrder: 1 },
     { key: "The Bridal Necklace", href: "/product/emerald-kundan-bridal-necklace", sortOrder: 2 },
   ];
   await prisma.banner.deleteMany({ where: { placement: "HOME_TRIPTYCH" } });
@@ -294,7 +312,7 @@ async function main() {
     ["Arjun M.", "Mumbai", "Stole the sangeet", "Wore it on a black bandhgala — three cousins have already asked for the link."],
     ["Kabir S.", "Delhi", "Packaging is a gift in itself", "Bought for my brother's wedding. Didn't even need wrapping paper."],
     ["Devansh R.", "Bengaluru", "Exactly as pictured", "The kundan work looks even better in hand than on screen."],
-    ["Meera P.", "Ahmedabad", "Perfect for Thakurji", "The stone haar sits beautifully on our home idol, festive but not heavy."],
+    ["Meera P.", "Ahmedabad", "Perfect for the mandir at home", "The stone necklace sits beautifully on our idol — festive, but not heavy at all."],
     ["Rohan K.", "Jaipur", "Groom-ready", "The swagat set made getting dressed for baraat morning so easy."],
   ];
   if ((await prisma.review.count()) === 0) {

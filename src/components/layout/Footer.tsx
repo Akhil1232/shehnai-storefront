@@ -16,7 +16,7 @@ export default function Footer({
           <span className="font-serif text-[26px] text-ink">Shehnai®</span>
           <p className="my-3.5 max-w-[36ch] text-[13px]">
             A modern ethnic jewellery &amp; accessories house from India — for men,
-            women, weddings, and your Thakurji.
+            women, weddings, and murti sringaar.
           </p>
           <span className="font-dev text-[15px] text-gold-bright">
             शहनाई · हर बात, बारीकी से
@@ -45,7 +45,7 @@ export default function Footer({
         <div>
           <h4 className="mb-4 text-[11px] uppercase tracking-[0.2em] text-ink">Policies</h4>
           <Link href="/policies/shipping" className="block py-1.5 text-[13.5px] hover:text-gold-bright">Shipping Policy</Link>
-          <Link href="/policies/returns" className="block py-1.5 text-[13.5px] hover:text-gold-bright">Return &amp; Exchange</Link>
+          <Link href="/policies/returns" className="block py-1.5 text-[13.5px] hover:text-gold-bright">Replacement Policy</Link>
           <Link href="/policies/privacy" className="block py-1.5 text-[13.5px] hover:text-gold-bright">Privacy Policy</Link>
           <Link href="/policies/terms" className="block py-1.5 text-[13.5px] hover:text-gold-bright">Terms &amp; Conditions</Link>
         </div>

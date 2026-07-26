@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/store/cart";
 import { formatINR } from "@/lib/money";
+import PolicyNote from "@/components/ui/PolicyNote";
 
 export default function CartDrawer() {
   const { lines, isOpen, close, setQty, remove } = useCart();
@@ -66,9 +67,17 @@ export default function CartDrawer() {
               <span>Subtotal</span>
               <b className="text-maroon">{formatINR(subtotal)}</b>
             </div>
-            <Link href="/checkout" onClick={close} className="btn btn-ink w-full">
-              Checkout
+            <Link href="/checkout" onClick={close} className="btn btn-gold w-full">
+              Checkout · {formatINR(subtotal)}
             </Link>
+            <Link
+              href="/cart"
+              onClick={close}
+              className="mt-2 block text-center text-[11.5px] uppercase tracking-[0.12em] text-[color:var(--muted)] hover:text-maroon"
+            >
+              View full bag
+            </Link>
+            <div className="mt-3"><PolicyNote variant="compact" /></div>
           </div>
         )}
       </div>

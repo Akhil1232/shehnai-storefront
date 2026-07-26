@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { fullProductInclude, cardProductSelect } from "@/types/catalog";
 import Gallery from "@/components/product/Gallery";
 import AddToCart from "@/components/product/AddToCart";
+import PolicyNote from "@/components/ui/PolicyNote";
 import ProductGrid from "@/components/product/ProductGrid";
 import SectionHead from "@/components/ui/SectionHead";
 
@@ -68,6 +69,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           )}
 
           <AddToCart product={product} />
+
+          <div className="mt-5">
+            <PolicyNote />
+          </div>
 
           <p className="mt-6 text-[15px] leading-relaxed text-[color:var(--muted)]">
             {product.description}

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/store/cart";
 import { formatINR } from "@/lib/money";
+import PolicyNote from "@/components/ui/PolicyNote";
 
 export default function CartPage() {
   const { lines, setQty, remove } = useCart();
@@ -56,7 +57,8 @@ export default function CartPage() {
             <p className="py-3 text-[12.5px] text-[color:var(--muted)]">
               Shipping calculated at checkout. Free over ₹999.
             </p>
-            <Link href="/checkout" className="btn btn-ink w-full">Proceed to Checkout</Link>
+            <Link href="/checkout" className="btn btn-gold w-full">Checkout · {formatINR(subtotal)}</Link>
+            <div className="mt-4"><PolicyNote /></div>
           </aside>
         </div>
       )}

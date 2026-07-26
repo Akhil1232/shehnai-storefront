@@ -1,7 +1,7 @@
 const ITEMS = [
-  { title: "Premium Quality", sub: "Hand-finished, quality-checked", d: "M12 2l2.5 5.5L20 8l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z" },
-  { title: "7-Day Exchanges", sub: "Easy returns on unused pieces", d: "M4 9h11a5 5 0 010 10H8M8 5L4 9l4 4" },
-  { title: "Free Shipping", sub: "On orders over ₹999", d: "M4 10h16v10H4zM8 10V7a4 4 0 018 0v3" },
+  { title: "Premium Quality", sub: "Hand-finished, checked before packing", d: "M12 2l2.5 5.5L20 8l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z" },
+  { title: "Replacement Support", sub: "With an unboxing video", d: "M4 9h11a5 5 0 010 10H8M8 5L4 9l4 4" },
+  { title: "Dispatch in 2–3 Days", sub: "Tracking shared on dispatch", d: "M4 10h16v10H4zM8 10V7a4 4 0 018 0v3" },
   { title: "Cash on Delivery", sub: "Available on most PIN codes", d: "M3 7h11v8H3zM14 10h4l3 3v2h-7z" },
 ];
 
