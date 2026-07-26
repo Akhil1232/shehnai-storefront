@@ -129,7 +129,9 @@ WebP preferred, under 250 KB each. Upload at full size — Cloudinary and
 | `npm run db:migrate` | Create a proper migration (use this once live) |
 | `npm run db:studio` | Browse/edit the database in a GUI — a stopgap admin panel |
 | `npm run db:seed` | Load starter content |
-| `npm run build` | Generates client, runs migrations, builds |
+| `npm run build` | Generates client, runs migrations, builds (managed platforms) |
+| `npm run build:app` | Plain `next build` — used when self-hosting, where deploy.sh already migrated |
+| `npm run admin:create` | Create or reset an admin login |
 
 `npm run db:studio` is worth knowing: it gives you a working table editor for
 products, stock and banners today, before the real admin panel exists.
@@ -238,9 +240,12 @@ domain.
 - Order confirmation emails (Resend or AWS SES)
 - Product search, wishlist, customer accounts
 - Policy page content (required before Razorpay activation)
-- A cron to release reservations from abandoned checkouts after 30 minutes
 
-See `DEPLOYMENT.md` to put this online.
+
+To put this online:
+
+- `DEPLOYMENT.md` — managed platform (Vercel + Supabase/Neon + Cloudinary)
+- `DEPLOYMENT-VPS.md` — self-hosted on a single VPS, with scripts in `deploy/`
 
 ---
 

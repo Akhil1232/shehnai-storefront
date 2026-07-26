@@ -1,0 +1,37 @@
+# /etc/systemd/system/shehnai.service
+#
+#   systemctl daemon-reload
+#   systemctl enable --now shehnai
+#   journalctl -u shehnai -f
+[Unit]
+Description=Shehnai storefront (Next.js)
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=shehnai
+WorkingDirectory=/home/shehnai/app
+EnvironmentFile=/home/shehnai/app/.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+
+# Restart rather than die if the box briefly runs out of memory
+OOMPolicy=continue
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/shehnai/app
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=shehnai
+
+[Install]
+WantedBy=multi-user.target

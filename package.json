@@ -12,7 +12,8 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate",
-    "admin:create": "tsx prisma/create-admin.ts"
+    "admin:create": "tsx prisma/create-admin.ts",
+    "build:app": "next build"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -25,7 +26,8 @@
     "react-dom": "^19.0.0",
     "zustand": "^5.0.3",
     "bcryptjs": "^2.4.3",
-    "jose": "^5.9.6"
+    "jose": "^5.9.6",
+    "sharp": "^0.33.5"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",

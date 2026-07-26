@@ -1,0 +1,15 @@
+# Install with:  sudo crontab -e
+#
+# Reads CRON_SECRET from the app's .env so it stays in one place.
+
+# Release stock held by abandoned checkouts — every 15 minutes.
+# Without this, every abandoned cart permanently locks its items and the
+# storefront starts showing phantom "only 2 left" warnings.
+*/15 * * * * . /home/shehnai/app/.env; curl -fsS -m 30 -H "x-cron-secret: $CRON_SECRET" https://YOURDOMAIN/api/cron/release-reservations >> /var/log/shehnai-cron.log 2>&1
+
+# Database backup — nightly at 02:30 IST.
+30 2 * * * /usr/local/bin/shehnai-backup >> /var/log/shehnai-backup.log 2>&1
+
+# TLS renewal (certbot usually installs its own timer; this is a belt-and-braces
+# fallback — harmless if it runs twice).
+15 3 * * * certbot renew --quiet --post-hook "systemctl reload nginx"
