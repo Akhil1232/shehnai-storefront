@@ -9,14 +9,15 @@ export default function TrustStrip() {
   return (
     <section className="py-[clamp(14px,1.8vw,24px)]">
       <div className="wrap">
-        <div className="grid grid-cols-2 gap-x-3.5 gap-y-[26px] border-y border-[color:var(--line-gold)] py-7 text-center lg:grid-cols-4 lg:gap-6">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-4 border-y border-[color:var(--line-gold)] py-5 text-center sm:gap-y-[26px] sm:py-7 lg:grid-cols-4 lg:gap-6">
           {ITEMS.map((i) => (
             <div key={i.title}>
-              <svg viewBox="0 0 24 24" className="mx-auto mb-2.5 h-7 w-7 fill-none stroke-gold stroke-[1.3]">
+              {/* Icons are desktop-only; on mobile the words carry it. */}
+              <svg viewBox="0 0 24 24" className="mx-auto mb-2.5 hidden h-7 w-7 fill-none stroke-gold stroke-[1.3] sm:block">
                 <path d={i.d} />
               </svg>
-              <b className="block font-serif text-[16.5px] font-semibold text-ink">{i.title}</b>
-              <span className="text-[11.5px] text-[color:var(--muted)]">{i.sub}</span>
+              <b className="block font-serif text-[14px] font-semibold text-ink sm:text-[16.5px]">{i.title}</b>
+              <span className="hidden text-[11.5px] text-[color:var(--muted)] sm:block">{i.sub}</span>
             </div>
           ))}
         </div>

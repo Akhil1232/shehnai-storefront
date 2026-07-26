@@ -126,3 +126,24 @@ Check Razorpay → Webhooks → delivery logs. Usually a secret mismatch.
 **"Only N left" when stock looks fine** — abandoned checkouts left reservations
 behind. Add a cron to release reservations on orders PENDING for over 30
 minutes; until then clear them in `npm run db:studio`.
+
+---
+
+## Admin panel in production
+
+1. Add `AUTH_SECRET` to Vercel's environment variables. Generate one with
+   `openssl rand -base64 32`. If this changes, everyone is signed out.
+2. Create the first user once, from your machine, against the production DB:
+
+```bash
+DATABASE_URL="<neon-pooled>" DIRECT_URL="<neon-direct>" \
+  npm run admin:create -- you@shehnai.in "a-strong-password" "Your Name"
+```
+
+3. Sign in at `https://yourdomain/admin`.
+
+Sessions are httpOnly JWT cookies, 8-hour expiry, verified at the edge by
+`src/middleware.ts`. There is no public sign-up route — every admin is created
+deliberately with the command above, so leaked credentials are the only way in.
+Give shop-floor staff the STAFF role: they can manage stock and orders but
+cannot delete products or change settings.

@@ -20,7 +20,7 @@ export default function Header({ verticals }: { verticals: NavVertical[] }) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-[color:var(--line)] bg-[rgba(240,229,203,0.92)] backdrop-blur-[10px]">
-      <div className="wrap flex h-[78px] items-center justify-between gap-4">
+      <div className="wrap flex h-[62px] items-center justify-between gap-4 sm:h-[78px]">
         <Link href="/" aria-label="Shehnai home" className="flex items-center">
           <Image
             src="/logo.png"
@@ -28,7 +28,7 @@ export default function Header({ verticals }: { verticals: NavVertical[] }) {
             width={160}
             height={48}
             priority
-            className="h-12 w-auto"
+            className="h-9 w-auto sm:h-12"
           />
         </Link>
 
@@ -78,12 +78,12 @@ export default function Header({ verticals }: { verticals: NavVertical[] }) {
             aria-label="Open menu"
             aria-expanded={mobileOpen}
           >
-            <span className="relative block h-[13px] w-[22px]">
+            <span className="relative block h-[13px] w-[20px]">
               <span className="absolute left-0 right-0 top-0 h-[1.4px] bg-gold" />
               <span className="absolute left-0 right-0 top-[6px] h-[1.4px] bg-gold" />
               <span className="absolute left-0 right-0 top-[12px] h-[1.4px] bg-gold" />
             </span>
-            Menu
+            <span className="hidden sm:inline">Menu</span>
           </button>
 
           <button

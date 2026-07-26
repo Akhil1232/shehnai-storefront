@@ -31,7 +31,7 @@ export default function EditorialSection({ data }: { data: EditorialData }) {
           >
             <div>
               {data.mediaUrl && (
-                <div className="relative aspect-[4/5] overflow-hidden rounded-[2px] border border-[color:var(--line-gold)]">
+                <div className="relative aspect-[4/5] overflow-hidden rounded-[2px] border border-[color:var(--line-gold)] max-sm:mx-auto max-sm:aspect-[4/4.6] max-sm:max-w-[300px]">
                   <Image
                     src={data.mediaUrl}
                     alt={data.heading ?? ""}
@@ -41,8 +41,10 @@ export default function EditorialSection({ data }: { data: EditorialData }) {
                   />
                 </div>
               )}
+              {/* Mini thumbs are desktop-only — on a phone they read as extra
+                  banners and crowd the story. */}
               {data.miniUrls.length > 0 && (
-                <div className="mt-3 grid grid-cols-2 gap-3">
+                <div className="mt-3 hidden grid-cols-2 gap-3 sm:grid">
                   {data.miniUrls.slice(0, 2).map((url, i) => (
                     <div
                       key={i}
@@ -55,17 +57,17 @@ export default function EditorialSection({ data }: { data: EditorialData }) {
               )}
             </div>
 
-            <div>
+            <div className="max-sm:text-center">
               {data.eyebrow && <span className="eyebrow">{data.eyebrow}</span>}
-              <b className="my-3 block font-serif text-[clamp(28px,3.6vw,46px)] font-semibold">
+              <b className="my-3 block font-serif text-[26px] font-semibold sm:text-[clamp(28px,3.6vw,46px)]">
                 {data.heading}
               </b>
               {data.body && (
-                <p className="mb-5 max-w-[44ch] text-[15px] text-[color:var(--muted)]">{data.body}</p>
+                <p className="mb-5 max-w-[44ch] text-[13.5px] text-[color:var(--muted)] max-sm:mx-auto sm:text-[15px]">{data.body}</p>
               )}
 
               {swatches.length > 0 && (
-                <div className="mb-[22px] flex gap-2.5">
+                <div className="mb-[22px] flex flex-wrap gap-2.5 max-sm:justify-center">
                   {swatches.map((s) => (
                     <span
                       key={s.label}
@@ -79,7 +81,7 @@ export default function EditorialSection({ data }: { data: EditorialData }) {
               )}
 
               {variant && (
-                <div className="mb-[26px] flex items-baseline gap-3">
+                <div className="mb-[26px] flex items-baseline gap-3 max-sm:justify-center">
                   <b className="text-[23px] text-gold-bright">{formatINR(variant.pricePaise)}</b>
                   {variant.mrpPaise > variant.pricePaise && (
                     <s className="text-[color:var(--muted)]">{formatINR(variant.mrpPaise)}</s>
@@ -90,7 +92,7 @@ export default function EditorialSection({ data }: { data: EditorialData }) {
               {data.ctaLabel && (
                 <Link
                   href={data.ctaHref ?? (data.product ? `/product/${data.product.slug}` : "/collections/all")}
-                  className="btn btn-gold"
+                  className="btn btn-gold max-sm:w-full max-sm:max-w-[260px]"
                 >
                   {data.ctaLabel}
                 </Link>

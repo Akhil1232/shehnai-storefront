@@ -11,7 +11,8 @@ npm install
 cp .env.example .env          # fill in DATABASE_URL at minimum
 npm run db:push               # create the tables
 npm run db:seed               # taxonomy + 14 products + homepage content
-npm run dev                   # http://localhost:3000
+npm run admin:create -- you@shehnai.in "YourPassword123" "Your Name"
+npm run dev                   # http://localhost:3000  ·  admin at /admin
 ```
 
 You need a Postgres URL before anything works. The fastest free option is
@@ -134,13 +135,59 @@ products, stock and banners today, before the real admin panel exists.
 
 ---
 
+## Admin panel — `/admin`
+
+Sign in with the user created by `npm run admin:create`. Roles: OWNER, ADMIN,
+STAFF (STAFF cannot delete products or change settings).
+
+| Screen | What it does |
+|---|---|
+| Dashboard | 30-day revenue, orders awaiting dispatch, low-stock alerts, recent orders |
+| Products | Search/filter, CSV export, full edit: spec sheet, SEO, status, badge |
+| → variants | Per-SKU price, MRP, cost, low-stock threshold, reorder point, supplier |
+| → images | Add, reorder, delete; required size shown on the field |
+| Inventory | Live stock table, per-row adjust, movement ledger, bulk CSV stocktake |
+| Orders | Filter by status, update fulfilment, carrier + tracking, CSV export |
+| Banners | All placements with required dimensions shown inline |
+| Home Sections | Edit "The Flagship Piece" / "The Bridal Edit" copy, product, images, order |
+| Reviews | Publish / feature / delete |
+| Settings | Announcement bar, shipping thresholds, COD toggle, contact details |
+
+**Stock is only ever changed through the ledger.** Every adjustment writes a
+`StockMovement` row with reason, note and who did it. Use "Set to" for a
+stocktake — it records the correction rather than overwriting the number.
+
+**Bulk stocktake at 300 SKUs:** Inventory → *Export for stocktake* → count on the
+floor → paste `sku,counted_qty` rows back into the CSV box. Each becomes a
+correcting movement, and unknown SKUs are reported rather than silently skipped.
+
+---
+
+## Mobile is a different layout, not a narrower one
+
+Phones get less content and more whitespace on purpose:
+
+| | Mobile | Desktop |
+|---|---|---|
+| Hero | Copy first, then **one** arch image | Three-panel triptych, then copy |
+| Collections | Quiet list with hairline dividers | Four arch image tiles |
+| Editorial | Single centred image | Main image + two mini thumbs |
+| Category page | Typographic header, no banner | Full 3:1 banner |
+| Trust strip | Words only | Icons + sub-copy |
+| Product card | No badge tag or star row | Everything |
+| Background | Scrolls with page, 120px tile | Fixed, 150px tile |
+
+The rule of thumb: if an element is decorative rather than informative, it is
+desktop-only. Search for `sm:hidden` and `max-sm:` to find every override.
+
+---
+
 ## Not built yet
 
-- **Admin panel** — the schema is fully ready for it (`AdminUser` with roles,
-  every content model editable). This is the next piece.
-- **CSV import/export** for bulk product and stock updates. Essential before
-  you load 300 SKUs by hand.
-- Order emails, search, wishlist, customer accounts, policy page content.
+- Order confirmation emails (Resend or AWS SES)
+- Product search, wishlist, customer accounts
+- Policy page content (required before Razorpay activation)
+- A cron to release reservations from abandoned checkouts after 30 minutes
 
 See `DEPLOYMENT.md` to put this online.
 

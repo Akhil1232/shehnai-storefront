@@ -10,7 +10,7 @@ export default function ProductGrid({ products }: { products: CardProduct[] }) {
     );
   }
   return (
-    <div className="mt-6 grid grid-cols-2 gap-[14px] md:grid-cols-3 lg:grid-cols-4 lg:gap-[clamp(16px,2vw,28px)]">
+    <div className="mt-5 grid grid-cols-2 gap-2.5 sm:mt-6 sm:gap-[14px] md:grid-cols-3 lg:grid-cols-4 lg:gap-[clamp(16px,2vw,28px)]">
       {products.map((p) => (
         <ProductCard key={p.id} product={p} />
       ))}

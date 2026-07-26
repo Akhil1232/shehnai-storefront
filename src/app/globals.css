@@ -47,6 +47,7 @@
 
   h1, h2, h3 {
     font-family: var(--font-serif), Georgia, serif;
+    text-wrap: balance;
     font-weight: 500;
     line-height: 1.14;
     letter-spacing: 0.005em;
@@ -57,10 +58,12 @@
 }
 
 @layer components {
-  .wrap { @apply mx-auto w-full max-w-wrap px-[clamp(18px,4vw,48px)]; }
+  .wrap { @apply mx-auto w-full max-w-wrap px-5 sm:px-[clamp(24px,4vw,48px)]; }
 
-  /* Vertical rhythm. One number to tune the whole page's breathing room. */
-  .section { @apply py-[clamp(32px,4.2vw,60px)]; }
+  /* Vertical rhythm. Two numbers tune the whole site's breathing room.
+     Mobile gets MORE relative whitespace and less content — that's what makes
+     a small screen feel composed rather than crammed. */
+  .section { @apply py-9 sm:py-[clamp(32px,4.2vw,60px)]; }
 
   .eyebrow {
     @apply text-[11px] font-bold uppercase tracking-[0.24em] text-gold;
@@ -78,9 +81,10 @@
   /* The Mughal arch frame used on the hero triptych and category tiles. */
   .arch-frame {
     @apply relative overflow-hidden rounded-arch border border-gold;
-    box-shadow: 0 0 0 6px var(--paper), 0 0 0 7px var(--line-gold),
-      0 22px 50px rgba(122, 35, 51, 0.14);
+    box-shadow: 0 0 0 4px var(--paper), 0 0 0 5px var(--line-gold),
+      0 12px 28px rgba(122, 35, 51, 0.1);
   }
+
 
   /* Scalloped gold-foil edge, used at the top of the footer. */
   .scallop {
@@ -108,4 +112,20 @@
 @media (prefers-reduced-motion: reduce) {
   .reveal { opacity: 1; transform: none; transition: none; }
   html { scroll-behavior: auto; }
+}
+
+@media (min-width: 641px) {
+  .arch-frame {
+    box-shadow: 0 0 0 6px var(--paper), 0 0 0 7px var(--line-gold),
+      0 22px 50px rgba(122, 35, 51, 0.14);
+  }
+}
+
+/* On phones, background-attachment:fixed causes repaint jank while scrolling and
+   the washes crowd a narrow viewport. Scroll the texture with the page instead. */
+@media (max-width: 640px) {
+  body {
+    background-attachment: scroll;
+    background-size: 120px 120px, auto, auto, auto;
+  }
 }
