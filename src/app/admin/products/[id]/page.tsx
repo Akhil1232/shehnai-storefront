@@ -3,9 +3,8 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import { formatINR } from "@/lib/money";
 import {
-  saveProduct, deleteProduct, saveVariant, deleteVariant,
+  saveProduct, deleteProduct, saveVariant,
   addImage, deleteImage, moveImage,
 } from "../../actions";
 import { Card, Field, TextArea, Select, Checkbox, ImageField, SubmitButton } from "@/components/admin/ui";

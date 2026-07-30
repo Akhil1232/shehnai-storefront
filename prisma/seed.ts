@@ -14,13 +14,17 @@ import { buildSku } from "../src/lib/slug";
 
 const prisma = new PrismaClient();
 
-// Swap these for your Cloudinary URLs.
+// Seeded products deliberately ship with NO image URLs. The storefront then
+// renders the built-in concept illustrations (src/components/ui/JewelArt),
+// which look like one coherent catalogue instead of a wall of broken
+// placeholders. Upload real photos from the admin panel and they take over
+// automatically — nothing here needs changing.
 const IMG = {
-  product: (i: number) => `https://res.cloudinary.com/demo/image/upload/w_2000,h_2000,c_fill/sample.jpg#${i}`,
-  triptych: (i: number) => `https://res.cloudinary.com/demo/image/upload/w_900,h_1200,c_fill/sample.jpg#${i}`,
-  editorial: (i: number) => `https://res.cloudinary.com/demo/image/upload/w_1200,h_1500,c_fill/sample.jpg#${i}`,
-  mini: (i: number) => `https://res.cloudinary.com/demo/image/upload/w_800,h_800,c_fill/sample.jpg#${i}`,
-  banner: (i: number) => `https://res.cloudinary.com/demo/image/upload/w_1920,h_640,c_fill/sample.jpg#${i}`,
+  product: (_i: number) => null,
+  triptych: (_i: number) => null,
+  editorial: (_i: number) => null,
+  mini: (_i: number) => null,
+  banner: (_i: number) => null,
 };
 
 const VERTICALS = [
@@ -150,7 +154,6 @@ async function main() {
       create: {
         slug: v.slug, name: v.name, devName: v.devName,
         description: v.description, sortOrder: v.sortOrder,
-        bannerUrl: IMG.banner(v.sortOrder), // 1920x640
       },
     });
     for (const [i, c] of v.categories.entries()) {
@@ -201,12 +204,7 @@ async function main() {
         sortOrder: i,
         ratingAvg: 4.6 + (i % 4) * 0.1,
         reviewCount: 12 + i * 3,
-        images: {
-          create: [
-            { url: IMG.product(i), alt: p.name, sortOrder: 0, isStudioPhoto: i === 0 },
-            { url: IMG.product(i + 100), alt: `${p.name} detail`, sortOrder: 1 },
-          ],
-        },
+        // No images seeded — see the IMG note above.
       },
     });
 
@@ -261,7 +259,6 @@ async function main() {
     await prisma.banner.create({
       data: {
         placement: "HOME_TRIPTYCH", title: t.key, href: t.href,
-        desktopUrl: IMG.triptych(t.sortOrder), // 900x1200
         alt: t.key, sortOrder: t.sortOrder, isActive: true,
       },
     });
@@ -282,8 +279,6 @@ async function main() {
       body: flagship?.description,
       ctaLabel: "View the Piece",
       productId: flagship?.id,
-      mediaUrl: IMG.editorial(1),
-      miniUrls: [IMG.mini(1), IMG.mini(2)],
       config: { swatches: [{ label: "Antique Brass", hex: "#C9A24B" }, { label: "Triple Chain", hex: "#4A0D15" }] },
       sortOrder: 1, isActive: true,
     },
@@ -299,8 +294,6 @@ async function main() {
       body: bridal?.description,
       ctaLabel: "View the Necklace",
       productId: bridal?.id,
-      mediaUrl: IMG.editorial(2),
-      miniUrls: [IMG.mini(3), IMG.mini(4)],
       config: { swatches: [{ label: "Emerald-Tone", hex: "#2F6B4F" }, { label: "Kundan & Gold", hex: "#C9A24B" }] },
       reversed: true, sortOrder: 2, isActive: true,
     },

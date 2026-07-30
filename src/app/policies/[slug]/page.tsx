@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Rule from "@/components/ui/Rule";
+import { cx, eyebrow, wrap } from "@/lib/styles";
+import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import { getSettings } from "@/lib/settings";
 
 export const revalidate = 3600;
@@ -175,35 +177,37 @@ export default async function PolicyPage({
   const settings = await getSettings();
 
   return (
-    <article className="wrap max-w-[720px] py-12 sm:py-16">
-      <header className="text-center">
-        <span className="eyebrow text-maroon">Shehnai®</span>
-        <h1 className="my-2 text-[28px] sm:text-[clamp(30px,4vw,42px)]">{policy.title}</h1>
-        <Rule className="mb-6" />
-        <p className="mx-auto max-w-[52ch] text-[14px] text-[color:var(--muted)]">{policy.intro}</p>
+    <article className={cx(wrap, "max-w-[760px]")}>
+      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: policy.title }]} />
+
+      <header className="pb-1.5 pt-2.5 text-center">
+        <span className={eyebrow}>Shehnai&reg;</span>
+        <h1 className="my-1.5 text-h1">{policy.title}</h1>
+        <Rule />
+        <p className="mx-auto mt-4 max-w-[52ch] text-sm text-muted">{policy.intro}</p>
       </header>
 
-      {policy.sections.map((section) => (
-        <section key={section.heading} className="mt-9">
-          <h2 className="mb-2.5 font-serif text-[21px]">{section.heading}</h2>
-          {section.body.map((para, i) => (
-            <p key={i} className="mb-3 text-[14.5px] leading-relaxed text-[color:var(--muted)]">
-              {para}
-            </p>
-          ))}
-        </section>
-      ))}
+      <div className="py-6 pb-12">
+        {policy.sections.map((section) => (
+          <section key={section.heading}>
+            <h2 className="mb-2 mt-6 text-[21px]">{section.heading}</h2>
+            {section.body.map((para, i) => (
+              <p key={i} className="mb-3 text-sm leading-relaxed text-muted">{para}</p>
+            ))}
+          </section>
+        ))}
 
-      <footer className="mt-12 rounded-[2px] border border-[color:var(--line-gold)] bg-paper p-5 text-center">
-        <p className="text-[13.5px] text-[color:var(--muted)]">
-          Questions about this policy? Write to{" "}
-          <a href={`mailto:${settings.supportEmail}`} className="font-semibold text-maroon">
-            {settings.supportEmail}
-          </a>{" "}
-          or message us on{" "}
-          <a href={settings.whatsapp} className="font-semibold text-maroon">WhatsApp</a>.
-        </p>
-      </footer>
+        <div className="mt-8 rounded border border-line-gold bg-cream p-4 text-center">
+          <p className="text-[13.5px] text-muted">
+            Questions about this policy? Write to{" "}
+            <a href={`mailto:${settings.supportEmail}`} className="font-bold text-maroon">
+              {settings.supportEmail}
+            </a>{" "}
+            or message us on{" "}
+            <a href={settings.whatsapp} className="font-bold text-maroon">WhatsApp</a>.
+          </p>
+        </div>
+      </div>
     </article>
   );
 }

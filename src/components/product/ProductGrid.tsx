@@ -1,19 +1,22 @@
 import ProductCard from "./ProductCard";
+import EmptyState from "@/components/ui/EmptyState";
 import type { CardProduct } from "@/types/catalog";
 
-export default function ProductGrid({ products }: { products: CardProduct[] }) {
+export default function ProductGrid({
+  products, emptyAction = true,
+}: { products: CardProduct[]; emptyAction?: boolean }) {
   if (products.length === 0) {
     return (
-      <p className="py-16 text-center text-[color:var(--muted)]">
-        Nothing here yet — try another filter.
-      </p>
+      <EmptyState
+        title="Nothing matches those filters"
+        body="Try removing one, or browse the full collection."
+        action={emptyAction ? { label: "Browse all jewellery", href: "/collections/all" } : undefined}
+      />
     );
   }
   return (
-    <div className="mt-5 grid grid-cols-2 gap-2.5 sm:mt-6 sm:gap-[14px] md:grid-cols-3 lg:grid-cols-4 lg:gap-[clamp(16px,2vw,28px)]">
-      {products.map((p) => (
-        <ProductCard key={p.id} product={p} />
-      ))}
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
+      {products.map((p, i) => <ProductCard key={p.id} product={p} priority={i < 4} />)}
     </div>
   );
 }

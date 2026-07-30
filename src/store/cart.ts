@@ -22,13 +22,10 @@ export type CartLine = {
 
 type CartState = {
   lines: CartLine[];
-  isOpen: boolean;
   add: (line: Omit<CartLine, "qty">, qty?: number) => void;
   remove: (variantId: string) => void;
   setQty: (variantId: string, qty: number) => void;
   clear: () => void;
-  open: () => void;
-  close: () => void;
   count: () => number;
   subtotal: () => number;
 };
@@ -37,7 +34,6 @@ export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
       lines: [],
-      isOpen: false,
 
       add: (line, qty = 1) =>
         set((s) => {
@@ -47,10 +43,9 @@ export const useCart = create<CartState>()(
               lines: s.lines.map((l) =>
                 l.variantId === line.variantId ? { ...l, qty: l.qty + qty } : l
               ),
-              isOpen: true,
             };
           }
-          return { lines: [...s.lines, { ...line, qty }], isOpen: true };
+          return { lines: [...s.lines, { ...line, qty }] };
         }),
 
       remove: (variantId) =>
@@ -65,8 +60,6 @@ export const useCart = create<CartState>()(
         })),
 
       clear: () => set({ lines: [] }),
-      open: () => set({ isOpen: true }),
-      close: () => set({ isOpen: false }),
 
       count: () => get().lines.reduce((n, l) => n + l.qty, 0),
       subtotal: () => get().lines.reduce((n, l) => n + l.pricePaise * l.qty, 0),

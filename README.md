@@ -166,22 +166,117 @@ correcting movement, and unknown SKUs are reported rather than silently skipped.
 
 ---
 
-## Mobile is a different layout, not a narrower one
+## Storefront design — how the styling works
 
-Phones get less content and more whitespace on purpose:
+**Everything is Tailwind. There are no component CSS classes.**
 
-| | Mobile | Desktop |
+That is a deliberate rule, and it exists because breaking it broke the site
+once already. The previous build kept a stylesheet of component classes
+(`.pcard`, `.btn`, `.ico-btn`…) *after* `@tailwind utilities`. Same specificity,
+later in the file — so every component class silently beat every Tailwind
+utility. `className="ico-btn lg:hidden"` never hid anything, and the mobile
+menu button rendered on top of the desktop nav.
+
+### Where things live
+
+| File | Holds |
+|---|---|
+| `tailwind.config.ts` | **The single source of truth.** Colours, fonts, breakpoints, radii, shadows, spacing, z-index layers. |
+| `src/lib/styles.ts` | Named class recipes (`btn.primary`, `wrap`, `input`, `card`). Plain strings, so per-use utilities still win. |
+| `src/app/globals.css` | ~90 lines. CSS variables, base element defaults, the body background. **No component classes.** |
+
+To retheme the site, edit `colors` in `tailwind.config.ts`. To change how every
+button looks, edit `btn` in `styles.ts`. Nothing else needs touching.
+
+### Two rules that keep it from tangling
+
+**1. Never add a component class to `globals.css`.** If a rule would beat a
+utility, it belongs in a component's `className` instead.
+
+**1b. Tune the page texture with one number.** The jaali lattice is painted by
+`body::before` as a fixed layer behind all content. Its strength is
+`--texture` in `globals.css`, currently **0.06**.
+
+The number is measured, not guessed — it is how far a pattern line drifts from
+the page colour in RGB:
+
+| `--texture` | drift | reads as |
 |---|---|---|
-| Hero | Copy first, then **one** arch image | Three-panel triptych, then copy |
-| Collections | Quiet list with hairline dividers | Four arch image tiles |
-| Editorial | Single centred image | Main image + two mini thumbs |
-| Category page | Typographic header, no banner | Full 3:1 banner |
-| Trust strip | Words only | Icons + sub-copy |
-| Product card | No badge tag or star row | Everything |
-| Background | Scrolls with page, 120px tile | Fixed, 150px tile |
+| 0.13 | 20 | too busy — an earlier build shipped this and the type suffered |
+| 0.08 | 12 | strongest value still comfortable under body copy |
+| **0.06** | **9** | **current — texture clearly present, type stays clean** |
+| 0.04 | 6 | nearly invisible |
 
-The rule of thumb: if an element is decorative rather than informative, it is
-desktop-only. Search for `sm:hidden` and `max-sm:` to find every override.
+Past 0.08 the copy starts to fight the background. The layer is `z-index: -1`
+and `pointer-events: none`, so it sits under everything and never blocks a
+click. `html` carries the gradient rather than `body`, which is what lets the
+negative layer paint above it.
+
+**2. Never guess a z-index.** The layers are named and ordered in the config:
+
+```
+bar (30) < header (40) < buybar (45) < tabbar (50) < backdrop (60) < panel (70) < toast (80)
+```
+
+Use `z-panel`, not `z-[70]`. The floating buy bar is anchored at
+`bottom-tabbar` so it sits *above* the mobile tab bar rather than under it, and
+the footer carries `pb-tabbar` so the tab bar never covers the last row of
+links.
+
+### Verifying before you ship
+
+```bash
+npm run verify        # tokens + logic + typecheck
+npm run preflight     # the above, plus a real `next build`
+```
+
+**Run `npm run preflight` before every deploy.** It reproduces exactly what the
+hosting build does, so type errors surface in seconds locally instead of after a
+two-minute cloud build.
+
+`verify` runs `prisma generate` before `tsc`, because TypeScript cannot check
+any Prisma call until the client has been generated — on a fresh checkout,
+skipping that step makes the typecheck fail for the wrong reasons.
+
+`npm run check:classes` is the important one. Tailwind fails **silently**: a
+typo like `text-marron`, an undefined layer like `z-9999`, or an off-scale
+value like `gap-99` all produce no CSS and no error — the page just looks
+wrong. The checker reads `tailwind.config.ts` and fails the build if any token
+in a `className` does not resolve.
+
+`npm run check:logic` covers the non-visual behaviour: money conversion,
+price-band parsing, shipping thresholds, checkout validation, cart maths, and
+that the z-index layers still ascend.
+
+### The flow
+
+Deliberately conventional — the patterns Indian shoppers already know:
+
+- **Search everywhere.** Persistent bar on desktop, full-screen overlay on
+  mobile, live suggestions from `/api/search`.
+- **Bottom tab bar on mobile** — Home / Shop / Search / Saved / Bag.
+- **Breadcrumbs** on every listing and product page.
+- **One component per job at every width.** Category cards reflow 2-up to 4-up
+  rather than becoming a different component.
+- **Filters update in place** via URL search params — checkboxes with live
+  counts, removable chips, bottom sheet on mobile.
+- **PDP** collapses long copy into accordions and floats a buy bar once the
+  main button scrolls away.
+- **Step bar** (Bag → Address & Payment → Done) on cart, checkout and
+  confirmation.
+- **Every dead end has an exit** — empty bag, empty wishlist, no search
+  results, no filter matches, 404.
+
+### Product imagery
+
+`ProductMedia` decides how every product is pictured: the uploaded photograph
+if there is one, otherwise a generated SVG concept render from
+`src/components/ui/JewelArt.tsx`, chosen deterministically from the category.
+
+This is why the seed ships **no image URLs** — a fresh install looks like one
+coherent catalogue instead of a wall of broken placeholders, and the client can
+add products before the photoshoot. Upload a real photo from the admin and it
+takes over automatically.
 
 ---
 

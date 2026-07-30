@@ -1,41 +1,24 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { cx } from "@/lib/styles";
 
-/**
- * Fades content up as it scrolls into view. Wraps children in a div rather than
- * cloning, so it works with any element. Respects prefers-reduced-motion via CSS.
- */
+/** Fades content up once as it enters the viewport. */
 export default function Reveal({
-  children,
-  className = "",
-  delay = 0,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  delay?: number;
-}) {
+  children, className,
+}: { children: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => el.classList.add("show"), delay);
-          io.unobserve(el);
-        }
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+      ([e]) => { if (e.isIntersecting) { el.classList.add("in"); io.unobserve(el); } },
+      { threshold: 0.1, rootMargin: "0px 0px -30px 0px" }
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [delay]);
+  }, []);
 
-  return (
-    <div ref={ref} className={`reveal ${className}`}>
-      {children}
-    </div>
-  );
+  return <div ref={ref} className={cx("reveal", className)}>{children}</div>;
 }

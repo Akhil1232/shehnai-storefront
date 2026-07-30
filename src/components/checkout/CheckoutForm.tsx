@@ -1,13 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/store/cart";
 import { formatINR } from "@/lib/money";
+import StepBar from "@/components/ui/StepBar";
 import PolicyNote from "@/components/ui/PolicyNote";
+import EmptyState from "@/components/ui/EmptyState";
+import { btn, btnFull, cx, input, inputError, label as labelCls, summaryRow, summaryTotal, wrap } from "@/lib/styles";
 
 declare global {
   interface Window { Razorpay: new (opts: Record<string, unknown>) => { open: () => void } }
@@ -17,91 +19,91 @@ const SAVED = "shehnai-address";
 
 type Form = {
   name: string; phone: string; email: string;
-  pincode: string; city: string; state: string;
-  line1: string; line2: string;
+  pincode: string; city: string; state: string; line1: string; line2: string;
 };
-
 const EMPTY: Form = { name: "", phone: "", email: "", pincode: "", city: "", state: "", line1: "", line2: "" };
+
+const CHECKS: [keyof Form, (v: string) => boolean, string][] = [
+  ["name", (v) => v.trim().length > 1, "Please enter your name"],
+  ["phone", (v) => /^[6-9]\d{9}$/.test(v.replace(/\D/g, "")), "Enter a valid 10-digit mobile number"],
+  ["email", (v) => /\S+@\S+\.\S+/.test(v), "Please enter a valid email"],
+  ["pincode", (v) => /^\d{6}$/.test(v.replace(/\D/g, "")), "Enter a valid 6-digit PIN code"],
+  ["line1", (v) => v.trim().length > 4, "Please enter your address"],
+];
 
 export default function CheckoutForm({
   freeShippingAt, flatShipping, codEnabled, codFee,
-}: {
-  freeShippingAt: number; flatShipping: number; codEnabled: boolean; codFee: number;
-}) {
+}: { freeShippingAt: number; flatShipping: number; codEnabled: boolean; codFee: number }) {
   const router = useRouter();
-  const { lines, clear, setQty } = useCart();
+  const { lines, clear } = useCart();
 
   const [f, setF] = useState<Form>(EMPTY);
   const [method, setMethod] = useState<"RAZORPAY" | "COD">("RAZORPAY");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pinState, setPinState] = useState<"idle" | "loading" | "ok" | "fail">("idle");
-  const [hasSaved, setHasSaved] = useState(false);
-  const [showSummary, setShowSummary] = useState(false);
-  const lineRef = useRef<HTMLInputElement>(null);
+  const [pinNote, setPinNote] = useState<{ ok: boolean; text: string } | null>(null);
+  const [bad, setBad] = useState<Set<keyof Form>>(new Set());
+  const line1Ref = useRef<HTMLInputElement>(null);
 
   /* Returning customers should never type their address twice. */
   useEffect(() => {
     try {
       const raw = localStorage.getItem(SAVED);
-      if (raw) { setF({ ...EMPTY, ...JSON.parse(raw) }); setHasSaved(true); setPinState("ok"); }
+      if (raw) setF({ ...EMPTY, ...JSON.parse(raw) });
     } catch { /* ignore */ }
   }, []);
 
-  const set = (k: keyof Form) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const set = (k: keyof Form) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setF((p) => ({ ...p, [k]: e.target.value }));
+    setBad((b) => { const n = new Set(b); n.delete(k); return n; });
+  };
 
-  /**
-   * PIN code fills city and state automatically — two fewer fields to type,
-   * and it catches typos before the parcel is packed.
-   */
+  /* PIN fills city and state — two fewer fields, and it catches typos early. */
   async function onPincode(e: React.ChangeEvent<HTMLInputElement>) {
     const pincode = e.target.value.replace(/\D/g, "").slice(0, 6);
     setF((p) => ({ ...p, pincode }));
-    if (pincode.length !== 6) { setPinState("idle"); return; }
+    setBad((b) => { const n = new Set(b); n.delete("pincode"); return n; });
+    if (pincode.length !== 6) { setPinNote(null); return; }
 
-    setPinState("loading");
+    setPinNote({ ok: true, text: "Looking up…" });
     try {
       const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
       const [data] = await res.json();
       const po = data?.PostOffice?.[0];
       if (data?.Status === "Success" && po) {
         setF((p) => ({ ...p, city: po.District, state: po.State }));
-        setPinState("ok");
-        lineRef.current?.focus();
-      } else setPinState("fail");
-    } catch { setPinState("fail"); }
+        setPinNote({ ok: true, text: `✓ ${po.District}, ${po.State}` });
+        line1Ref.current?.focus();
+      } else setPinNote({ ok: false, text: "Please fill city and state yourself." });
+    } catch { setPinNote({ ok: false, text: "Please fill city and state yourself." }); }
   }
 
   const subtotal = lines.reduce((n, l) => n + l.pricePaise * l.qty, 0);
   const shipping = subtotal >= freeShippingAt ? 0 : flatShipping;
   const fee = method === "COD" ? codFee : 0;
   const total = subtotal + shipping + fee;
-  const away = freeShippingAt - subtotal;
-
-  const valid =
-    f.name.trim().length > 1 &&
-    /^[6-9]\d{9}$/.test(f.phone.replace(/\D/g, "")) &&
-    f.email.includes("@") &&
-    /^\d{6}$/.test(f.pincode) &&
-    f.city && f.state && f.line1.trim().length > 4;
 
   async function placeOrder() {
+    const failed = new Set<keyof Form>();
+    CHECKS.forEach(([k, ok]) => { if (!ok(f[k])) failed.add(k); });
+    if (failed.size) {
+      setBad(failed);
+      setError("Please check the highlighted fields.");
+      const first = document.getElementById(`f-${[...failed][0]}`);
+      first?.scrollIntoView({ block: "center", behavior: "smooth" });
+      first?.focus();
+      return;
+    }
+
     setBusy(true); setError(null);
     try {
       localStorage.setItem(SAVED, JSON.stringify(f));
-
       const res = await fetch("/api/checkout/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: lines.map((l) => ({ variantId: l.variantId, qty: l.qty })),
-          email: f.email,
-          phone: f.phone,
-          address: {
-            name: f.name, phone: f.phone, line1: f.line1, line2: f.line2,
-            city: f.city, state: f.state, pincode: f.pincode,
-          },
+          email: f.email, phone: f.phone,
+          address: { name: f.name, phone: f.phone, line1: f.line1, line2: f.line2, city: f.city, state: f.state, pincode: f.pincode },
           paymentMethod: method,
         }),
       });
@@ -111,19 +113,13 @@ export default function CheckoutForm({
       if (data.cod) { clear(); router.push(`/order/${data.orderNumber}`); return; }
 
       const rz = new window.Razorpay({
-        key: data.keyId,
-        amount: data.amount,
-        currency: "INR",
-        name: "Shehnai®",
-        description: `Order ${data.orderNumber}`,
-        order_id: data.razorpayOrderId,
+        key: data.keyId, amount: data.amount, currency: "INR",
+        name: "Shehnai®", description: `Order ${data.orderNumber}`, order_id: data.razorpayOrderId,
         prefill: { name: f.name, email: f.email, contact: f.phone },
         theme: { color: "#8A2226" },
         handler: async (r: Record<string, string>) => {
           const v = await fetch("/api/checkout/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(r),
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(r),
           });
           if (v.ok) { clear(); router.push(`/order/${data.orderNumber}`); }
           else setError("Payment could not be verified. If money was debited, contact us with your order number.");
@@ -137,138 +133,147 @@ export default function CheckoutForm({
     }
   }
 
-  if (lines.length === 0) {
+  if (!lines.length) {
     return (
-      <div className="wrap py-24 text-center">
-        <p className="mb-6 text-[color:var(--muted)]">Your bag is empty.</p>
-        <Link href="/collections/all" className="btn btn-gold">Explore the Collection</Link>
+      <div className={wrap}>
+        <EmptyState icon="bag" title="Your bag is empty"
+                    body="Add something first, then come back here."
+                    action={{ label: "Start shopping", href: "/collections/all" }} />
       </div>
     );
   }
 
-  const field =
-    "w-full rounded-[2px] border border-[color:var(--line)] bg-paper px-3.5 py-3 text-[14px] outline-none focus:border-gold";
+  const Field = ({ k, label, err, ...rest }: {
+    k: keyof Form; label: string; err?: string;
+  } & React.InputHTMLAttributes<HTMLInputElement>) => (
+    <div>
+      <label htmlFor={`f-${k}`} className={labelCls}>{label}</label>
+      <input id={`f-${k}`} value={f[k]} onChange={set(k)}
+             className={cx(input, bad.has(k) && inputError)} {...rest} />
+      {bad.has(k) && err && <span className="mt-1 block text-[11.5px] text-maroon">{err}</span>}
+    </div>
+  );
+
+  const block = "mb-4 rounded border border-line bg-paper p-4.5";
+  const blockTitle = "mb-3.5 flex items-center gap-2.5 text-[11px] font-extrabold uppercase tracking-[0.13em]";
+  const stepDot = "grid h-[22px] w-[22px] flex-none place-items-center rounded-full bg-maroon text-[11px] not-italic text-white";
 
   return (
     <>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
 
-      <div className="wrap max-w-[960px] pb-40 pt-6 sm:pb-12 sm:pt-10">
-        <div className="mb-5 flex items-baseline justify-between">
-          <h1 className="text-[26px] sm:text-[34px]">Checkout</h1>
-          <Link href="/collections/all" className="text-[12px] text-maroon">Add more →</Link>
-        </div>
+      {/* pb leaves room for the sticky pay bar, which sits above the tab bar. */}
+      <div className={cx(wrap, "pb-40 lg:pb-12")}>
+        <StepBar current={2} />
+        <h1 className="mb-4 mt-2.5 text-center text-h1">Checkout</h1>
 
-        {/* ---- collapsible order summary: one tap, no separate cart page ---- */}
-        <button
-          onClick={() => setShowSummary((v) => !v)}
-          className="mb-4 flex w-full items-center justify-between rounded-[2px] border border-[color:var(--line-gold)] bg-paper px-4 py-3 text-left"
-        >
-          <span className="text-[13px]">
-            <b>{lines.reduce((n, l) => n + l.qty, 0)} item{lines.length > 1 ? "s" : ""}</b>
-            <span className="text-[color:var(--muted)]"> · {formatINR(total)}</span>
-          </span>
-          <span className="text-[12px] text-maroon">{showSummary ? "Hide" : "View"} ▾</span>
-        </button>
-
-        {showSummary && (
-          <div className="mb-5 rounded-[2px] border border-[color:var(--line)] bg-paper p-4">
-            {lines.map((l) => (
-              <div key={l.variantId} className="flex items-center gap-3 border-b border-[color:var(--line)] py-2.5 last:border-0">
-                <div className="relative h-14 w-14 flex-none overflow-hidden rounded-[2px] bg-[#1D1712]">
-                  {l.imageUrl && <Image src={l.imageUrl} alt={l.name} fill sizes="56px" className="object-cover" />}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-serif text-[15px]">{l.name}</p>
-                  <div className="mt-0.5 flex items-center gap-2">
-                    <button onClick={() => setQty(l.variantId, l.qty - 1)} className="rounded border border-[color:var(--line)] px-2 text-[13px]" aria-label="Decrease">−</button>
-                    <span className="text-[12.5px]">{l.qty}</span>
-                    <button onClick={() => setQty(l.variantId, l.qty + 1)} className="rounded border border-[color:var(--line)] px-2 text-[13px]" aria-label="Increase">+</button>
-                  </div>
-                </div>
-                <b className="text-[13.5px] text-maroon">{formatINR(l.pricePaise * l.qty)}</b>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {away > 0 && (
-          <p className="mb-4 rounded-[2px] bg-[#E7D3B1] px-3 py-2 text-center text-[12px] text-ink">
-            Add {formatINR(away)} more for free shipping.
-          </p>
-        )}
-
-        {hasSaved && (
-          <p className="mb-3 text-[12px] text-[color:var(--muted)]">
-            Using your saved details — edit anything below if it has changed.
-          </p>
-        )}
-
-        <div className="grid gap-6 sm:grid-cols-[1fr_300px]">
+        <div className="grid gap-6 lg:grid-cols-[1fr_350px] lg:gap-9">
           <div>
-            {/* -------- contact + address, one screen, PIN-first ------------- */}
-            <div className="grid gap-2.5 sm:grid-cols-2">
-              <input className={field} placeholder="Full name" value={f.name} onChange={set("name")} autoComplete="name" />
-              <input className={field} placeholder="10-digit mobile number" value={f.phone} onChange={set("phone")} inputMode="numeric" autoComplete="tel" />
-              <input className={`${field} sm:col-span-2`} placeholder="Email (for your order confirmation)" value={f.email} onChange={set("email")} type="email" autoComplete="email" />
-
-              <div>
-                <input className={field} placeholder="PIN code" value={f.pincode} onChange={onPincode} inputMode="numeric" autoComplete="postal-code" />
-                {pinState === "loading" && <span className="mt-1 block text-[11.5px] text-[color:var(--muted)]">Looking up…</span>}
-                {pinState === "fail" && <span className="mt-1 block text-[11.5px] text-maroon">Couldn&apos;t find that PIN — type your city and state below.</span>}
+            <div className={block}>
+              <div className={blockTitle}><i className={stepDot}>1</i>Contact</div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field k="name" label="Full name" autoComplete="name" placeholder="Your name" err={CHECKS[0][2]} />
+                <Field k="phone" label="Mobile number" inputMode="numeric" maxLength={10}
+                       autoComplete="tel" placeholder="10-digit number" err={CHECKS[1][2]} />
+                <div className="sm:col-span-2">
+                  <Field k="email" label="Email" type="email" autoComplete="email"
+                         placeholder="For your order confirmation" err={CHECKS[2][2]} />
+                </div>
               </div>
-              <input className={field} placeholder="City" value={f.city} onChange={set("city")} autoComplete="address-level2" />
-              <input className={`${field} sm:col-span-2`} ref={lineRef} placeholder="Flat / house no., building, street" value={f.line1} onChange={set("line1")} autoComplete="address-line1" />
-              <input className={field} placeholder="Area / landmark (optional)" value={f.line2} onChange={set("line2")} autoComplete="address-line2" />
-              <input className={field} placeholder="State" value={f.state} onChange={set("state")} autoComplete="address-level1" />
             </div>
 
-            {/* --------------------------- payment -------------------------- */}
-            <div className="mt-6 grid gap-2">
+            <div className={block}>
+              <div className={blockTitle}><i className={stepDot}>2</i>Delivery address</div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="f-pincode" className={labelCls}>PIN code</label>
+                  <input id="f-pincode" value={f.pincode} onChange={onPincode} inputMode="numeric"
+                         maxLength={6} autoComplete="postal-code" placeholder="6 digits"
+                         className={cx(input, bad.has("pincode") && inputError)} />
+                  {bad.has("pincode") && <span className="mt-1 block text-[11.5px] text-maroon">{CHECKS[3][2]}</span>}
+                  {pinNote && (
+                    <span className={cx("mt-1 block text-[11.5px]", pinNote.ok ? "text-forest" : "text-muted")}>
+                      {pinNote.text}
+                    </span>
+                  )}
+                </div>
+                <Field k="city" label="City" autoComplete="address-level2" placeholder="Auto-filled from PIN" />
+                <div className="sm:col-span-2">
+                  <label htmlFor="f-line1" className={labelCls}>Flat / house no., building, street</label>
+                  <input id="f-line1" ref={line1Ref} value={f.line1} onChange={set("line1")}
+                         autoComplete="address-line1" placeholder="Address"
+                         className={cx(input, bad.has("line1") && inputError)} />
+                  {bad.has("line1") && <span className="mt-1 block text-[11.5px] text-maroon">{CHECKS[4][2]}</span>}
+                </div>
+                <Field k="line2" label="Area / landmark (optional)" autoComplete="address-line2" />
+                <Field k="state" label="State" autoComplete="address-level1" placeholder="Auto-filled from PIN" />
+              </div>
+            </div>
+
+            <div className={block}>
+              <div className={blockTitle}><i className={stepDot}>3</i>Payment</div>
               {([
                 ["RAZORPAY", "Pay online", "UPI · Cards · Net Banking · Wallets"],
-                ...(codEnabled ? [["COD", "Cash on Delivery", codFee > 0 ? `+ ${formatINR(codFee)} handling` : "Available on most PIN codes"] as const] : []),
-              ] as const).map(([key, label, sub]) => (
-                <label key={key} className={`flex cursor-pointer items-start gap-3 rounded-[2px] border p-3.5 ${method === key ? "border-gold bg-paper" : "border-[color:var(--line)]"}`}>
-                  <input type="radio" name="pay" checked={method === key} onChange={() => setMethod(key as "RAZORPAY" | "COD")} className="mt-1 accent-[#8A2226]" />
+                ...(codEnabled
+                  ? [["COD", "Cash on Delivery", codFee > 0 ? `+ ${formatINR(codFee)} handling` : "Available on most PIN codes"] as const]
+                  : []),
+              ] as const).map(([key, title, sub]) => (
+                <label key={key} onClick={() => setMethod(key as "RAZORPAY" | "COD")}
+                       className={cx(
+                         "mb-2 flex cursor-pointer items-start gap-3 rounded border bg-paper p-3.5 transition-all",
+                         method === key ? "border-gold ring-1 ring-gold" : "border-line hover:border-gold/60"
+                       )}>
+                  <input type="radio" name="pay" checked={method === key}
+                         onChange={() => setMethod(key as "RAZORPAY" | "COD")}
+                         className="mt-0.5 h-[18px] w-[18px] accent-maroon" />
                   <span>
-                    <b className="block text-[14px]">{label}</b>
-                    <span className="text-[12.5px] text-[color:var(--muted)]">{sub}</span>
+                    <b className="block text-sm">{title}</b>
+                    <span className="text-xs text-muted">{sub}</span>
                   </span>
                 </label>
               ))}
             </div>
 
-            <div className="mt-5"><PolicyNote /></div>
-            {error && <p className="mt-4 text-[13.5px] font-semibold text-maroon">{error}</p>}
+            <PolicyNote />
+            {error && <p className="mt-3.5 text-[13.5px] font-semibold text-maroon">{error}</p>}
           </div>
 
-          {/* ------------- desktop summary; mobile uses the sticky bar ------- */}
-          <aside className="hidden h-fit rounded-[2px] border border-[color:var(--line-gold)] bg-paper p-5 sm:block">
-            <div className="flex justify-between py-1 text-[13.5px]"><span>Subtotal</span><span>{formatINR(subtotal)}</span></div>
-            <div className="flex justify-between py-1 text-[13.5px]"><span>Shipping</span><span>{shipping === 0 ? "Free" : formatINR(shipping)}</span></div>
-            {fee > 0 && <div className="flex justify-between py-1 text-[13.5px]"><span>COD fee</span><span>{formatINR(fee)}</span></div>}
-            <div className="mt-2 flex justify-between border-t border-[color:var(--line)] pt-3 text-[17px]">
-              <b>Total</b><b className="text-maroon">{formatINR(total)}</b>
+          <aside className="h-fit rounded border border-line-gold bg-paper p-5 lg:sticky lg:top-sticky-top">
+            <h2 className="mb-3 text-[19px]">Order Summary</h2>
+            {lines.map((l) => (
+              <div key={l.variantId} className={summaryRow}>
+                <span className="max-w-[64%]">{l.name} × {l.qty}</span>
+                <span>{formatINR(l.pricePaise * l.qty)}</span>
+              </div>
+            ))}
+            <div className={cx(summaryRow, "mt-1.5 border-t border-line pt-2.5")}>
+              <span>Subtotal</span><span>{formatINR(subtotal)}</span>
             </div>
-            <button onClick={placeOrder} disabled={!valid || busy} className="btn btn-ink mt-4 w-full disabled:opacity-50">
+            <div className={summaryRow}>
+              <span>Shipping</span>
+              <span className={shipping ? "" : "font-bold text-forest"}>{shipping ? formatINR(shipping) : "FREE"}</span>
+            </div>
+            {fee > 0 && <div className={summaryRow}><span>COD fee</span><span>{formatINR(fee)}</span></div>}
+            <div className={summaryTotal}><span>Total</span><b className="text-maroon">{formatINR(total)}</b></div>
+
+            <button onClick={placeOrder} disabled={busy} className={cx(btn.primary, btnFull, "mt-3.5")}>
               {busy ? "Please wait…" : method === "COD" ? "Place Order" : `Pay ${formatINR(total)}`}
             </button>
-            <p className="mt-2.5 text-center text-[11px] text-[color:var(--muted)]">
+            <p className="mt-2 text-center text-[11px] text-muted">
               Amount is recalculated on our server before you are charged.
             </p>
           </aside>
         </div>
       </div>
 
-      {/* ---- mobile: pay button always in reach, never a scroll away ------- */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[color:var(--line-gold)] bg-beige/95 px-4 py-3 backdrop-blur sm:hidden">
-        <div className="mb-2 flex justify-between text-[13px]">
-          <span className="text-[color:var(--muted)]">Total {shipping === 0 ? "· free shipping" : `incl. ${formatINR(shipping)} shipping`}</span>
-          <b className="text-maroon">{formatINR(total)}</b>
+      {/* Sticky pay bar, mobile only. Sits above the tab bar, never under it. */}
+      <div className="fixed inset-x-0 bottom-tabbar z-buybar flex items-center gap-2.5 border-t border-line-gold bg-[#F3E9D3]/97 px-4 py-2.5 backdrop-blur-md lg:hidden">
+        <div className="flex-none">
+          <b className="block text-base text-maroon">{formatINR(total)}</b>
+          <span className="text-[10px] text-muted">{shipping ? "incl. shipping" : "free shipping"}</span>
         </div>
-        <button onClick={placeOrder} disabled={!valid || busy} className="btn btn-ink w-full disabled:opacity-50">
-          {busy ? "Please wait…" : method === "COD" ? "Place Order" : `Pay ${formatINR(total)}`}
+        <button onClick={placeOrder} disabled={busy} className={cx(btn.primary, "flex-1")}>
+          {busy ? "Please wait…" : method === "COD" ? "Place Order" : "Pay Now"}
         </button>
       </div>
     </>

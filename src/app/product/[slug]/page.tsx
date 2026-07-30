@@ -4,17 +4,20 @@ import { prisma } from "@/lib/prisma";
 import { fullProductInclude, cardProductSelect } from "@/types/catalog";
 import Gallery from "@/components/product/Gallery";
 import AddToCart from "@/components/product/AddToCart";
-import PolicyNote from "@/components/ui/PolicyNote";
+import PincodeCheck from "@/components/product/PincodeCheck";
 import ProductGrid from "@/components/product/ProductGrid";
+import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import SectionHead from "@/components/ui/SectionHead";
+import Accordion from "@/components/ui/Accordion";
+import PolicyNote from "@/components/ui/PolicyNote";
+import { Icon, type IconName } from "@/components/ui/icons";
+import { cx, eyebrow, section, wrap } from "@/lib/styles";
 
 export const revalidate = 60;
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
+const stars = (r: number) => "\u2605".repeat(Math.round(r)) + "\u2606".repeat(5 - Math.round(r));
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const p = await prisma.product.findUnique({
     where: { slug },
@@ -30,16 +33,12 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = await prisma.product.findUnique({
-    where: { slug },
-    include: fullProductInclude,
-  });
+  const product = await prisma.product.findUnique({ where: { slug }, include: fullProductInclude });
   if (!product || product.status !== "PUBLISHED") notFound();
 
   const related = await prisma.product.findMany({
     where: { status: "PUBLISHED", verticalId: product.verticalId, id: { not: product.id } },
-    select: cardProductSelect,
-    take: 4,
+    select: cardProductSelect, take: 4,
   });
 
   const spec: [string, string | null][] = [
@@ -49,63 +48,86 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     ["Closure", product.closure],
   ];
 
+  const usp: [IconName, string][] = [
+    ["truck", "Dispatch in 2–3 days"],
+    ["swap", "Replacement support"],
+    ["cash", "COD available"],
+  ];
+
   return (
-    <>
-      <div className="wrap grid gap-[clamp(24px,4vw,56px)] py-10 md:grid-cols-2">
-        <Gallery images={product.images} name={product.name} />
+    <div className={wrap}>
+      <Breadcrumbs items={[
+        { label: "Home", href: "/" },
+        { label: product.vertical.name, href: `/collections/${product.vertical.slug}` },
+        ...(product.category
+          ? [{ label: product.category.name, href: `/collections/${product.vertical.slug}?category=${product.category.slug}` }]
+          : []),
+        { label: product.name },
+      ]} />
+
+      <div className="grid gap-6 pb-10 lg:grid-cols-[1.06fr_.94fr] lg:gap-12 lg:pb-15">
+        <Gallery images={product.images} name={product.name} slug={product.slug}
+                 category={product.category?.name ?? product.vertical.name} />
 
         <div>
-          <span className="eyebrow text-maroon">
+          <span className={cx(eyebrow, "text-maroon")}>
             {product.category?.name ?? product.vertical.name}
           </span>
-          <h1 className="my-2 text-[clamp(28px,3.6vw,42px)]">{product.name}</h1>
+          <h1 className="my-1.5 text-h1">{product.name}</h1>
+
           {product.reviewCount > 0 && (
-            <div className="mb-3 text-[12px] tracking-[2px] text-gold">
-              {"★".repeat(Math.round(product.ratingAvg))}
-              <span className="ml-2 text-[color:var(--muted)]">
+            <div className="flex items-center gap-2">
+              <span className="text-[13px] tracking-[2px] text-gold">{stars(product.ratingAvg)}</span>
+              <span className="text-[13.5px] text-muted">
                 {product.ratingAvg.toFixed(1)} · {product.reviewCount} reviews
               </span>
             </div>
           )}
 
           <AddToCart product={product} />
+          <PincodeCheck />
 
-          <div className="mt-5">
-            <PolicyNote />
+          <div className="mt-5 grid grid-cols-3 gap-2.5 border-y border-line py-3.5 text-center">
+            {usp.map(([icon, label]) => (
+              <div key={label} className="text-[10.5px] font-bold leading-snug text-muted">
+                <Icon name={icon} className="mx-auto mb-1.5 h-5 w-5 text-gold-deep" />
+                {label}
+              </div>
+            ))}
           </div>
 
-          <p className="mt-6 text-[15px] leading-relaxed text-[color:var(--muted)]">
-            {product.description}
-          </p>
+          <div className="mt-2">
+            <Accordion title="Description" defaultOpen>{product.description}</Accordion>
 
-          {spec.some(([, v]) => v) && (
-            <dl className="mt-7 border-t border-[color:var(--line)]">
-              {spec.filter(([, v]) => v).map(([k, v]) => (
-                <div key={k} className="flex gap-4 border-b border-[color:var(--line)] py-2.5 text-[13.5px]">
-                  <dt className="w-32 flex-none font-bold uppercase tracking-[0.1em] text-[11px] text-ink">{k}</dt>
-                  <dd className="text-[color:var(--muted)]">{v}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
+            {spec.some(([, v]) => v) && (
+              <Accordion title="Details">
+                <dl className="grid grid-cols-[auto_1fr] gap-x-5 gap-y-2">
+                  {spec.filter(([, v]) => v).map(([k, v]) => (
+                    <div key={k} className="contents">
+                      <dt className="text-xs font-bold text-ink">{k}</dt>
+                      <dd>{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </Accordion>
+            )}
 
-          {product.careNotes && (
-            <div className="mt-6 rounded-[2px] border border-[color:var(--line-gold)] bg-paper p-4 text-[13px] text-[color:var(--muted)]">
-              <b className="mb-1 block text-[11px] uppercase tracking-[0.14em] text-ink">Care</b>
-              {product.careNotes}
-            </div>
-          )}
+            <Accordion title="Care">
+              {product.careNotes ??
+                "Wipe with a dry cloth. Keep away from perfume, water and humidity. Store in the pouch provided. Plated finishes change with wear — this is expected."}
+            </Accordion>
+
+            <Accordion title="Shipping & replacement"><PolicyNote /></Accordion>
+          </div>
         </div>
       </div>
 
       {related.length > 0 && (
-        <section className="section">
-          <div className="wrap">
-            <SectionHead title="You May Also Like" />
-            <ProductGrid products={related} />
-          </div>
+        <section className={cx(section, "border-t border-line")}>
+          <SectionHead center rule title="You may also like" />
+          <div className="mt-5"><ProductGrid products={related} emptyAction={false} /></div>
         </section>
       )}
-    </>
+    </div>
   );
 }

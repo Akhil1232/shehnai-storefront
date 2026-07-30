@@ -2,130 +2,141 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ==========================================================================
-   Design tokens. Change a colour here and it changes everywhere, including
-   Tailwind classes, which reference these same values.
-   ========================================================================== */
+/**
+ * =============================================================================
+ * globals.css — DELIBERATELY SMALL
+ * =============================================================================
+ * All visual design lives in tailwind.config.ts and in utility classes on the
+ * components. This file holds only three things:
+ *
+ *   1. CSS variables, mirroring the Tailwind palette, so arbitrary values like
+ *      `border-[color:var(--line)]` keep working (the admin panel uses these).
+ *   2. Base element defaults that cannot be expressed as utilities.
+ *   3. Two tiny helpers that need a media query or an observer class.
+ *
+ * Do NOT add component classes here. If a rule would beat a Tailwind utility,
+ * it belongs in a component's className instead — mixing the two means the
+ * later one silently wins and elements start overlapping.
+ */
+
 :root {
   --onyx: #120d0a;
   --ink: #241c15;
+  --ink-soft: #4a3b2e;
   --maroon: #8a2226;
   --maroon-deep: #5a0f12;
+  --maroon-soft: #f3e6e2;
   --gold: #c9a24b;
-  --gold-bright: #9c6f2e;
-  --cream: #f7f0de;
-  --peach: #e7d3b1;
+  --gold-deep: #9c6f2e;
+  --gold-pale: #e7d3b1;
+  --forest: #2f6b4f;
   --beige: #efe3cb;
   --beige-deep: #e8dabe;
+  --cream: #f7f0de;
   --paper: #fcf8ef;
-  --muted: rgba(36, 28, 21, 0.6);
-  --line: rgba(36, 28, 21, 0.12);
-  --line-gold: rgba(201, 162, 75, 0.42);
-
-  /* Jaali lattice. Deliberately at ~0.05 alpha — it should register as warmth
-     in the beige, not as a visible pattern. Raise cautiously. */
-  --jaali: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxNTAnIGhlaWdodD0nMTUwJyB2aWV3Qm94PScwIDAgMTUwIDE1MCc+CjxnIGZpbGw9J25vbmUnIHN0cm9rZT0nI0E5NzYyRicgc3Ryb2tlLXdpZHRoPScwLjknIG9wYWNpdHk9JzAuMDU1Jz4KPGNpcmNsZSBjeD0nMCcgY3k9JzAnIHI9Jzc1LjAnLz48Y2lyY2xlIGN4PScxNTAnIGN5PScwJyByPSc3NS4wJy8+CjxjaXJjbGUgY3g9JzAnIGN5PScxNTAnIHI9Jzc1LjAnLz48Y2lyY2xlIGN4PScxNTAnIGN5PScxNTAnIHI9Jzc1LjAnLz4KPGNpcmNsZSBjeD0nNzUuMCcgY3k9Jzc1LjAnIHI9Jzc1LjAnLz4KPC9nPgo8ZyBmaWxsPSdub25lJyBzdHJva2U9JyM4RTVCMjInIHN0cm9rZS13aWR0aD0nMC45JyBvcGFjaXR5PScwLjA0NSc+CjxwYXRoIGQ9J003NS4wIDU2LjAgTDk0LjAgNzUuMCBMNzUuMCA5NC4wIEw1Ni4wIDc1LjAgWicvPgo8cGF0aCBkPSdNMCAtMTkgTDE5IDAgTDAgMTkgTC0xOSAwIFonLz4KPHBhdGggZD0nTTE1MCAtMTkgTDE2OSAwIEwxNTAgMTkgTDEzMSAwIFonLz4KPHBhdGggZD0nTTAgMTMxIEwxOSAxNTAgTDAgMTY5IEwtMTkgMTUwIFonLz4KPHBhdGggZD0nTTE1MCAxMzEgTDE2OSAxNTAgTDE1MCAxNjkgTDEzMSAxNTAgWicvPgo8L2c+CjxnIGZpbGw9JyNBOTc2MkYnIG9wYWNpdHk9JzAuMDU1Jz4KPGNpcmNsZSBjeD0nNzUuMCcgY3k9JzAnIHI9JzIuMScvPjxjaXJjbGUgY3g9JzAnIGN5PSc3NS4wJyByPScyLjEnLz4KPGNpcmNsZSBjeD0nMTUwJyBjeT0nNzUuMCcgcj0nMi4xJy8+PGNpcmNsZSBjeD0nNzUuMCcgY3k9JzE1MCcgcj0nMi4xJy8+CjxjaXJjbGUgY3g9Jzc1LjAnIGN5PSc3NS4wJyByPScyLjQnLz4KPC9nPgo8L3N2Zz4=");
+  --muted: rgba(36, 28, 21, 0.62);
+  --faint: rgba(36, 28, 21, 0.42);
+  --line: rgba(36, 28, 21, 0.13);
+  --line-gold: rgba(201, 162, 75, 0.45);
 }
 
 @layer base {
-  html { scroll-behavior: smooth; }
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* ---------------------------------------------------------------------
+     PAGE TEXTURE
+     ---------------------------------------------------------------------
+     The jaali lattice is painted by body::before as a fixed layer sitting
+     BEHIND all content, so its strength is one number — --texture — rather
+     than something baked into the SVG.
+
+     Readability, measured as how far a pattern line drifts from the page
+     colour:
+
+       0.13  drift 20  <- the old build. This is what read as messy.
+       0.08  drift 12  strongest value still comfortable under body copy
+       0.06  drift  9  <- current. Texture is clearly present, type stays clean.
+       0.04  drift  6  nearly invisible
+
+     Raise it if you want more presence; past 0.08 the type starts to suffer.
+     --------------------------------------------------------------------- */
+  :root {
+    --texture: 0.06;
+  }
+
+  html {
+    /* The gradient lives on html so the texture layer below can sit above it. */
+    background-color: #EFE3CB;
+    background-image: linear-gradient(180deg, #F2E7D2 0%, #EFE3CB 22%, #EFE3CB 78%, #EADCC2 100%);
+    background-attachment: fixed;
+  }
 
   body {
-    background-color: var(--beige);
-    background-image: var(--jaali),
-      radial-gradient(ellipse 900px 520px at 8% -6%, rgba(186, 138, 74, 0.13), transparent 62%),
-      radial-gradient(ellipse 720px 520px at 102% 18%, rgba(201, 162, 75, 0.11), transparent 62%),
-      radial-gradient(ellipse 820px 620px at 18% 105%, rgba(186, 138, 74, 0.12), transparent 62%);
-    background-repeat: repeat, no-repeat, no-repeat, no-repeat;
-    background-size: 150px 150px, auto, auto, auto;
-    background-attachment: fixed;
-    color: var(--ink);
-    font-size: 15px;
-    line-height: 1.65;
-    -webkit-font-smoothing: antialiased;
+    @apply text-ink font-sans text-[15px] leading-relaxed antialiased;
+    position: relative;
+    overflow-x: hidden;
   }
 
-  h1, h2, h3 {
-    font-family: var(--font-serif), Georgia, serif;
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;              /* behind every element, above the page gradient */
+    pointer-events: none;
+    background-image: theme("backgroundImage.jaali");
+    background-repeat: repeat;
+    background-size: 168px 168px;
+    opacity: var(--texture);
+  }
+
+  /* A fixed layer repaints on every scroll frame on iOS, so let it scroll. */
+  @media (max-width: 640px) {
+    html { background-attachment: scroll; }
+    /* inset:0 from the base rule already stretches this to the full body
+       height; height:100% would resolve against an auto-height parent. */
+    body::before { position: absolute; background-size: 140px 140px; }
+  }  /* A fixed background repaints on every scroll frame on iOS. */
+  @media (max-width: 640px) {
+    body { background-attachment: scroll; }
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-serif font-semibold;
     text-wrap: balance;
-    font-weight: 500;
-    line-height: 1.14;
-    letter-spacing: 0.005em;
   }
 
-  ::selection { background: var(--gold); color: var(--onyx); }
-  :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+  ::selection {
+    @apply bg-gold text-onyx;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-[3px] outline-gold rounded-[2px];
+    outline-style: solid;
+  }
+
+  /* Hide the scrollbar on horizontal product rails without losing scrolling. */
+  .no-bar::-webkit-scrollbar { height: 0; width: 0; }
+  .no-bar { scrollbar-width: none; }
 }
 
-@layer components {
-  .wrap { @apply mx-auto w-full max-w-wrap px-5 sm:px-[clamp(24px,4vw,48px)]; }
-
-  /* Vertical rhythm. Two numbers tune the whole site's breathing room.
-     Mobile gets MORE relative whitespace and less content — that's what makes
-     a small screen feel composed rather than crammed. */
-  .section { @apply py-9 sm:py-[clamp(32px,4.2vw,60px)]; }
-
-  .eyebrow {
-    @apply text-[11px] font-bold uppercase tracking-[0.24em] text-gold;
+/* Scroll-reveal. The `.in` class is added by components/ui/Reveal.tsx. */
+@layer utilities {
+  .reveal {
+    @apply opacity-0 translate-y-5 transition-[opacity,transform] duration-700 ease-silk;
   }
-
-  .btn {
-    @apply inline-flex min-h-[48px] items-center justify-center gap-[9px]
-           rounded-[2px] px-8 py-[15px] text-[11.5px] font-bold uppercase
-           tracking-[0.16em] transition-colors duration-200;
-  }
-  .btn-ink   { @apply bg-ink text-cream hover:bg-maroon hover:text-white; }
-  .btn-line  { @apply border border-ink text-ink hover:bg-ink hover:text-cream; }
-  .btn-gold  { @apply bg-gold text-onyx hover:bg-gold-bright; }
-
-  /* The Mughal arch frame used on the hero triptych and category tiles. */
-  .arch-frame {
-    @apply relative overflow-hidden rounded-arch border border-gold;
-    box-shadow: 0 0 0 4px var(--paper), 0 0 0 5px var(--line-gold),
-      0 12px 28px rgba(122, 35, 51, 0.1);
-  }
-
-
-  /* Scalloped gold-foil edge, used at the top of the footer. */
-  .scallop {
-    height: 14px;
-    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyNCcgaGVpZ2h0PScxNCcgdmlld0JveD0nMCAwIDI0IDE0Jz4KPHBhdGggZD0nTTAgMS42IEgyNCcgc3Ryb2tlPScjQzlBMjRCJyBzdHJva2Utd2lkdGg9JzEnIGZpbGw9J25vbmUnIG9wYWNpdHk9JzAuNTUnLz4KPHBhdGggZD0nTTAgMiBRNiAyMiAxMiAyIFExOCAyMiAyNCAyJyBmaWxsPSdub25lJyBzdHJva2U9JyNDOUEyNEInIHN0cm9rZS13aWR0aD0nMS4zNScvPgo8L3N2Zz4=");
-    background-repeat: repeat-x;
-    background-size: 24px 14px;
-  }
-
-  .card-surface {
-    @apply overflow-hidden rounded-[2px] border bg-paper transition-shadow duration-300;
-    border-color: var(--line);
+  .reveal.in {
+    @apply opacity-100 translate-y-0;
   }
 }
-
-/* Scroll reveal, driven by src/components/ui/Reveal.tsx */
-.reveal {
-  opacity: 0;
-  transform: translateY(26px);
-  transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.3, 1),
-    transform 0.7s cubic-bezier(0.2, 0.7, 0.3, 1);
-}
-.reveal.show { opacity: 1; transform: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  .reveal { opacity: 1; transform: none; transition: none; }
   html { scroll-behavior: auto; }
-}
-
-@media (min-width: 641px) {
-  .arch-frame {
-    box-shadow: 0 0 0 6px var(--paper), 0 0 0 7px var(--line-gold),
-      0 22px 50px rgba(122, 35, 51, 0.14);
-  }
-}
-
-/* On phones, background-attachment:fixed causes repaint jank while scrolling and
-   the washes crowd a narrow viewport. Scroll the texture with the page instead. */
-@media (max-width: 640px) {
-  body {
-    background-attachment: scroll;
-    background-size: 120px 120px, auto, auto, auto;
+  .reveal { opacity: 1; transform: none; transition: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

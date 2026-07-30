@@ -13,7 +13,12 @@
     "db:seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate",
     "admin:create": "tsx prisma/create-admin.ts",
-    "build:app": "next build"
+    "build:app": "next build",
+    "check:classes": "node scripts/check-classes.mjs",
+    "verify": "node scripts/check-classes.mjs && node scripts/check-logic.mjs && npm run typecheck",
+    "check:logic": "node scripts/check-logic.mjs",
+    "typecheck": "prisma generate && tsc --noEmit",
+    "preflight": "npm run verify && next build"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

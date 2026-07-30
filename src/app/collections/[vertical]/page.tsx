@@ -1,105 +1,125 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
+import { Suspense } from "react";
+import type { Metadata } from "next";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { cardProductSelect } from "@/types/catalog";
 import ProductGrid from "@/components/product/ProductGrid";
-import Filters from "@/components/collection/Filters";
+import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import Rule from "@/components/ui/Rule";
+import { FilterSidebar, FilterBar, FilterChips, SortToolbar, PRICE_BANDS } from "@/components/collection/Filters";
+import { cx, wrap } from "@/lib/styles";
 
 export const revalidate = 60;
 
-type Search = { category?: string; sort?: string; min?: string; max?: string };
+type Search = { category?: string | string[]; price?: string | string[]; sort?: string };
 
 const ORDER: Record<string, Prisma.ProductOrderByWithRelationInput> = {
+  featured: { sortOrder: "asc" },
   newest: { createdAt: "desc" },
   rating: { ratingAvg: "desc" },
-  featured: { sortOrder: "asc" },
 };
 
+const arr = (v?: string | string[]) => (v === undefined ? [] : Array.isArray(v) ? v : [v]);
+
+export async function generateMetadata({ params }: { params: Promise<{ vertical: string }> }): Promise<Metadata> {
+  const { vertical } = await params;
+  if (vertical === "all") return { title: "All Jewellery" };
+  const v = await prisma.vertical.findUnique({ where: { slug: vertical } });
+  return v ? { title: v.name, description: v.description ?? undefined } : {};
+}
+
 export default async function CollectionPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ vertical: string }>;
-  searchParams: Promise<Search>;
-}) {
+  params, searchParams,
+}: { params: Promise<{ vertical: string }>; searchParams: Promise<Search> }) {
   const { vertical: slug } = await params;
   const sp = await searchParams;
   const isAll = slug === "all";
 
-  const vertical = isAll
-    ? null
-    : await prisma.vertical.findUnique({
-        where: { slug },
-        include: { categories: { where: { isActive: true }, orderBy: { sortOrder: "asc" } } },
-      });
-
+  const vertical = isAll ? null : await prisma.vertical.findUnique({
+    where: { slug },
+    include: { categories: { where: { isActive: true }, orderBy: { sortOrder: "asc" } } },
+  });
   if (!isAll && !vertical) notFound();
+
+  const cats = arr(sp.category);
+  const bands = arr(sp.price);
+
+  const priceOr: Prisma.ProductVariantWhereInput[] = bands.map((b) => {
+    const [lo, hi] = b.split("-");
+    return { pricePaise: { gte: Number(lo) * 100, ...(hi ? { lte: Number(hi) * 100 } : {}) } };
+  });
 
   const where: Prisma.ProductWhereInput = {
     status: "PUBLISHED",
     ...(vertical ? { verticalId: vertical.id } : {}),
-    ...(sp.category ? { category: { slug: sp.category } } : {}),
-    ...(sp.min || sp.max
-      ? {
-          variants: {
-            some: {
-              pricePaise: {
-                ...(sp.min ? { gte: Number(sp.min) * 100 } : {}),
-                ...(sp.max ? { lte: Number(sp.max) * 100 } : {}),
-              },
-            },
-          },
-        }
-      : {}),
+    ...(cats.length ? { category: { slug: { in: cats } } } : {}),
+    ...(priceOr.length ? { variants: { some: { OR: priceOr } } } : {}),
   };
 
-  const products = await prisma.product.findMany({
-    where,
-    select: cardProductSelect,
-    orderBy: ORDER[sp.sort ?? "featured"] ?? ORDER.featured,
-    take: 96, // paginate past this once the catalogue grows beyond ~400
-  });
+  const sortKey = sp.sort ?? "featured";
+
+  const [products, catCounts] = await Promise.all([
+    prisma.product.findMany({ where, select: cardProductSelect, orderBy: ORDER[sortKey] ?? ORDER.featured, take: 120 }),
+    vertical
+      ? prisma.product.groupBy({
+          by: ["categoryId"],
+          where: { status: "PUBLISHED", verticalId: vertical.id },
+          _count: { _all: true },
+        })
+      : Promise.resolve([] as { categoryId: string | null; _count: { _all: number } }[]),
+  ]);
+
+  // Prisma cannot order by a field across a to-many relation, so price sorting
+  // happens here instead.
+  if (sortKey === "low" || sortKey === "high") {
+    products.sort((a, b) => {
+      const pa = a.variants[0]?.pricePaise ?? 0;
+      const pb = b.variants[0]?.pricePaise ?? 0;
+      return sortKey === "low" ? pa - pb : pb - pa;
+    });
+  }
+
+  const categories = (vertical?.categories ?? []).map((c) => ({
+    slug: c.slug, name: c.name,
+    count: catCounts.find((x) => x.categoryId === c.id)?._count._all ?? 0,
+  }));
+
+  const chips = [
+    ...cats.map((c) => ({ key: "category" as const, value: c,
+      label: categories.find((x) => x.slug === c)?.name ?? c.replace(/-/g, " ") })),
+    ...bands.map((b) => ({ key: "price" as const, value: b,
+      label: PRICE_BANDS.find((p) => p[0] === b)?.[1] ?? b })),
+  ];
 
   const title = vertical?.name ?? "All Jewellery";
-  const banner = vertical?.bannerUrl;
 
   return (
-    <>
-      <header className="relative border-b border-[color:var(--line)] pb-5 pt-8 text-center sm:pt-[clamp(28px,4vw,48px)]">
-        {/* The banner is desktop-only. On a phone the title alone is calmer,
-            and it was the main source of "too many banners". */}
-        {banner && (
-          <div className="relative mx-auto mb-6 hidden aspect-[3/1] max-w-[1280px] overflow-hidden rounded-[2px] sm:block">
-            <Image src={banner} alt={title} fill priority sizes="100vw" className="object-cover" />
-          </div>
-        )}
-        <div className="wrap">
-          <span className="eyebrow text-maroon">Collection</span>
-          <h1 className="my-2 text-[27px] sm:text-[clamp(30px,4.2vw,48px)]">{title}</h1>
-          {vertical?.description && (
-            <p className="mx-auto max-w-[52ch] text-[13px] text-[color:var(--muted)] sm:text-[14.5px]">
-              {vertical.description}
-            </p>
-          )}
-          <Rule className="mt-4" />
-        </div>
-      </header>
+    <div className={wrap}>
+      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: title }]} />
 
-      <div className="wrap grid items-start gap-[clamp(24px,3vw,44px)] py-10 md:grid-cols-[240px_1fr]">
-        <Filters
-          categories={vertical?.categories ?? []}
-          basePath={`/collections/${slug}`}
-          active={sp}
-        />
+      <div className="border-b border-line pb-4">
+        <h1 className="text-h1">{title}</h1>
+        <p className="mt-1 text-[13.5px] text-muted">
+          {vertical?.description ?? "Every piece across all four collections."}
+        </p>
+        <Rule className="mx-0 mt-3" />
+      </div>
+
+      <Suspense fallback={null}>
+        <FilterBar categories={categories} />
+        <FilterChips labels={chips} />
+      </Suspense>
+
+      <div className={cx("grid items-start gap-6 py-5 pb-12 lg:grid-cols-[236px_1fr] lg:gap-9")}>
+        <Suspense fallback={<div />}>
+          <FilterSidebar categories={categories} />
+        </Suspense>
         <div>
-          <p className="pb-4 text-[11.5px] font-bold uppercase tracking-[0.1em] text-[color:var(--muted)]">
-            {products.length} piece{products.length === 1 ? "" : "s"}
-          </p>
+          <Suspense fallback={null}><SortToolbar count={products.length} /></Suspense>
           <ProductGrid products={products} />
         </div>
       </div>
-    </>
+    </div>
   );
 }

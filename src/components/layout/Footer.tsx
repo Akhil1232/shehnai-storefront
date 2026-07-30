@@ -1,59 +1,59 @@
 import Link from "next/link";
+import { cx, wrap } from "@/lib/styles";
 import type { SiteSettings } from "@/lib/settings";
+import type { NavVertical } from "./Header";
+
+const ftLink = "block py-1.5 text-[13.5px] text-muted hover:text-gold-deep";
+const ftHead = "mb-3 text-[10.5px] font-extrabold uppercase tracking-[0.16em] font-sans";
 
 export default function Footer({
-  settings,
-  verticals,
-}: {
-  settings: SiteSettings;
-  verticals: { id: string; slug: string; name: string }[];
-}) {
+  settings, verticals,
+}: { settings: SiteSettings; verticals: NavVertical[] }) {
+  // pb-tabbar clears the fixed mobile tab bar. The padding belongs here rather
+  // than on <main>, because the footer is a sibling that sits below it — put it
+  // on main and the tab bar covers the last row of footer links.
   return (
-    <footer className="relative border-t border-[color:var(--line-gold)] bg-beige-deep text-[color:var(--muted)]">
-      <div className="scallop" aria-hidden />
-      <div className="wrap grid grid-cols-1 gap-[34px] pb-[30px] pt-[42px] sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+    <footer className="relative mt-5 border-t border-line-gold bg-beige-deep pb-tabbar lg:pb-0">
+      {/* Scalloped gold-foil edge from the packaging. */}
+      <div aria-hidden className="h-3.5 bg-scallop bg-[length:24px_14px] bg-repeat-x" />
+
+      <div className={cx(wrap, "grid gap-7 pb-7 pt-9 md:grid-cols-[1.5fr_1fr_1fr_1fr] md:gap-8")}>
         <div>
-          <span className="font-serif text-[26px] text-ink">Shehnai®</span>
-          <p className="my-3.5 max-w-[36ch] text-[13px]">
-            A modern ethnic jewellery &amp; accessories house from India — for men,
-            women, weddings, and murti sringaar.
+          <div className="font-serif text-[26px] font-semibold">Shehnai&reg;</div>
+          <p className="my-3 max-w-[34ch] text-[13.5px] text-muted">
+            A modern ethnic jewellery &amp; accessories house from India &mdash; for men, women,
+            weddings, and murti sringaar.
           </p>
-          <span className="font-dev text-[15px] text-gold-bright">
-            शहनाई · हर बात, बारीकी से
-          </span>
+          <span className="font-dev text-[15px] text-maroon">शहनाई · हर बात, बारीकी से</span>
         </div>
 
         <div>
-          <h4 className="mb-4 text-[11px] uppercase tracking-[0.2em] text-ink">Shop</h4>
+          <h4 className={ftHead}>Shop</h4>
           {verticals.map((v) => (
-            <Link key={v.id} href={`/collections/${v.slug}`} className="block py-1.5 text-[13.5px] hover:text-gold-bright">
-              {v.name}
-            </Link>
+            <Link key={v.id} href={`/collections/${v.slug}`} className={ftLink}>{v.name}</Link>
           ))}
-          <Link href="/collections/all" className="block py-1.5 text-[13.5px] hover:text-gold-bright">
-            All Jewellery
-          </Link>
+          <Link href="/collections/all" className={ftLink}>All Jewellery</Link>
         </div>
 
         <div>
-          <h4 className="mb-4 text-[11px] uppercase tracking-[0.2em] text-ink">Company</h4>
-          <Link href="/about" className="block py-1.5 text-[13.5px] hover:text-gold-bright">About Us</Link>
-          <a href={`mailto:${settings.supportEmail}`} className="block py-1.5 text-[13.5px] hover:text-gold-bright">Contact Us</a>
-          <a href={settings.whatsapp} className="block py-1.5 text-[13.5px] hover:text-gold-bright">WhatsApp</a>
+          <h4 className={ftHead}>Help</h4>
+          <Link href="/policies/shipping" className={ftLink}>Shipping Policy</Link>
+          <Link href="/policies/returns" className={ftLink}>Replacement Policy</Link>
+          <Link href="/policies/privacy" className={ftLink}>Privacy Policy</Link>
+          <Link href="/policies/terms" className={ftLink}>Terms &amp; Conditions</Link>
         </div>
 
         <div>
-          <h4 className="mb-4 text-[11px] uppercase tracking-[0.2em] text-ink">Policies</h4>
-          <Link href="/policies/shipping" className="block py-1.5 text-[13.5px] hover:text-gold-bright">Shipping Policy</Link>
-          <Link href="/policies/returns" className="block py-1.5 text-[13.5px] hover:text-gold-bright">Replacement Policy</Link>
-          <Link href="/policies/privacy" className="block py-1.5 text-[13.5px] hover:text-gold-bright">Privacy Policy</Link>
-          <Link href="/policies/terms" className="block py-1.5 text-[13.5px] hover:text-gold-bright">Terms &amp; Conditions</Link>
+          <h4 className={ftHead}>Contact</h4>
+          <a href={`mailto:${settings.supportEmail}`} className={ftLink}>{settings.supportEmail}</a>
+          <a href={settings.whatsapp} className={ftLink}>WhatsApp</a>
+          <a href={settings.instagram} className={ftLink}>Instagram</a>
         </div>
       </div>
 
-      <div className="wrap flex flex-wrap justify-between gap-3.5 border-t border-[color:var(--line)] py-5 text-[11.5px]">
-        <span>© {new Date().getFullYear()} Shehnai® · Ethnic Accessories. All rights reserved.</span>
-        <span>UPI · Cards · Net Banking · Wallets · COD</span>
+      <div className={cx(wrap, "flex flex-wrap justify-between gap-3 border-t border-line py-4 text-[11.5px] text-muted")}>
+        <span>&copy; {new Date().getFullYear()} Shehnai&reg; &middot; Ethnic Accessories</span>
+        <span>UPI &middot; Cards &middot; Net Banking &middot; Wallets &middot; COD</span>
       </div>
     </footer>
   );

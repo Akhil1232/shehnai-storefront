@@ -21,9 +21,12 @@ export type StockMovementInput = {
   variantId: string;
   delta: number; // signed: +12 received, -1 sold
   reason: StockReason;
-  note?: string;
-  reference?: string; // order number, invoice, stocktake id
-  createdBy?: string;
+  // These mirror nullable Prisma columns, so they accept null as well as
+  // undefined — form helpers hand back `string | null` and shouldn't each
+  // have to coerce.
+  note?: string | null;
+  reference?: string | null; // order number, invoice, stocktake id
+  createdBy?: string | null;
 };
 
 /** Records a movement AND updates the running total atomically. */
