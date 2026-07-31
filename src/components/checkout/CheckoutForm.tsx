@@ -267,7 +267,7 @@ export default function CheckoutForm({
       </div>
 
       {/* Sticky pay bar, mobile only. Sits above the tab bar, never under it. */}
-      <div className="fixed inset-x-0 bottom-tabbar z-buybar flex items-center gap-2.5 border-t border-line-gold bg-[#F3E9D3]/97 px-4 py-2.5 backdrop-blur-md lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-buybar flex items-center gap-2.5 border-t border-line-gold bg-[#FCF3F0]/97 px-4 pb-[calc(0.625rem+env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-md lg:hidden">
         <div className="flex-none">
           <b className="block text-base text-maroon">{formatINR(total)}</b>
           <span className="text-[10px] text-muted">{shipping ? "incl. shipping" : "free shipping"}</span>

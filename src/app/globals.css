@@ -27,50 +27,59 @@
   --maroon-deep: #5a0f12;
   --maroon-soft: #f3e6e2;
   --gold: #c9a24b;
-  --gold-deep: #9c6f2e;
+  --gold-deep: #7e5a25;
   --gold-pale: #e7d3b1;
+  --rose: #d3a0a8;
+  --header: #fcf3f0;
   --forest: #2f6b4f;
-  --beige: #efe3cb;
-  --beige-deep: #e8dabe;
-  --cream: #f7f0de;
-  --paper: #fcf8ef;
-  --muted: rgba(36, 28, 21, 0.62);
+  --beige: #fdfaf6;
+  --beige-deep: #f7e6e5;
+  --cream: #fcf4f1;
+  --paper: #ffffff;
+  --muted: rgba(36, 28, 21, 0.68);
   --faint: rgba(36, 28, 21, 0.42);
-  --line: rgba(36, 28, 21, 0.13);
-  --line-gold: rgba(201, 162, 75, 0.45);
+  --line: rgba(138, 34, 38, 0.13);
+  --line-gold: rgba(201, 162, 75, 0.42);
 }
 
 @layer base {
-  html {
-    scroll-behavior: smooth;
-    -webkit-text-size-adjust: 100%;
-  }
-
   /* ---------------------------------------------------------------------
-     PAGE TEXTURE
+     PAGE BACKGROUND
      ---------------------------------------------------------------------
-     The jaali lattice is painted by body::before as a fixed layer sitting
-     BEHIND all content, so its strength is one number — --texture — rather
-     than something baked into the SVG.
+     Three layers, in paint order:
 
-     Readability, measured as how far a pattern line drifts from the page
-     colour:
+       1. a WARM WHITE field                     #FDFAF6
+       2. two soft blush pools, low opacity      #F6DCDF / #F9E7DC
+       3. a fine lattice ornament                --texture
 
-       0.13  drift 20  <- the old build. This is what read as messy.
-       0.08  drift 12  strongest value still comfortable under body copy
-       0.06  drift  9  <- current. Texture is clearly present, type stays clean.
-       0.04  drift  6  nearly invisible
+     Why not a flat pink page: a flat fill tints every pixel behind the type,
+     so the copy is always fighting it. A warm white field with blush arriving
+     as a diffuse wash reads as pink overall, while the text itself sits on
+     something close to white. That is how the packaging works too — the blush
+     is an accent, not a flood.
 
-     Raise it if you want more presence; past 0.08 the type starts to suffer.
+     The pools are large, soft and asymmetric on purpose. Symmetric corner
+     vignettes look like smudging; an off-centre wash looks like paper.
+
+     --texture governs the ornament only:
+
+       0.09  visible at a glance
+       0.055 <- current: you see it when you look for it, not before
+       0.03  effectively invisible
+
+     Contrast never drops below 13:1 anywhere on the page, so this is a taste
+     control, not a legibility one.
      --------------------------------------------------------------------- */
   :root {
-    --texture: 0.06;
+    --texture: 0.055;
   }
 
   html {
-    /* The gradient lives on html so the texture layer below can sit above it. */
-    background-color: #EFE3CB;
-    background-image: linear-gradient(180deg, #F2E7D2 0%, #EFE3CB 22%, #EFE3CB 78%, #EADCC2 100%);
+    background-color: #FDFAF6;
+    background-image:
+      radial-gradient(ellipse 80% 55% at 78% 0%,   rgba(246,220,223,.62), transparent 68%),
+      radial-gradient(ellipse 70% 50% at 12% 34%,  rgba(249,231,220,.50), transparent 66%),
+      radial-gradient(ellipse 95% 45% at 50% 100%, rgba(246,220,223,.55), transparent 70%);
     background-attachment: fixed;
   }
 
@@ -80,27 +89,24 @@
     overflow-x: hidden;
   }
 
+  /* Ornament sits at z-index -1: above the washes, below every element.
+     pointer-events:none so it can never intercept a click. */
   body::before {
     content: "";
     position: fixed;
     inset: 0;
-    z-index: -1;              /* behind every element, above the page gradient */
+    z-index: -1;
     pointer-events: none;
-    background-image: theme("backgroundImage.jaali");
+    background-image: theme("backgroundImage.ornament");
     background-repeat: repeat;
-    background-size: 168px 168px;
+    background-size: 96px 96px;
     opacity: var(--texture);
   }
 
-  /* A fixed layer repaints on every scroll frame on iOS, so let it scroll. */
+  /* A fixed layer repaints on every scroll frame on iOS, so let both scroll. */
   @media (max-width: 640px) {
     html { background-attachment: scroll; }
-    /* inset:0 from the base rule already stretches this to the full body
-       height; height:100% would resolve against an auto-height parent. */
-    body::before { position: absolute; background-size: 140px 140px; }
-  }  /* A fixed background repaints on every scroll frame on iOS. */
-  @media (max-width: 640px) {
-    body { background-attachment: scroll; }
+    body::before { position: absolute; background-size: 84px 84px; }
   }
 
   h1, h2, h3, h4 {

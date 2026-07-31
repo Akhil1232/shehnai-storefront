@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { saveSection } from "../actions";
-import { Card, Field, TextArea, Select, Checkbox, ImageField, SubmitButton } from "@/components/admin/ui";
+import { Card, Field, TextArea, Select, Checkbox, SubmitButton } from "@/components/admin/ui";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,7 @@ export default async function SectionsPage() {
                 <Field label="CTA link" name="ctaHref" defaultValue={s.ctaHref} hint="Blank = links to the featured product." />
               </div>
               <Select label="Featured product" name="productId" defaultValue={s.productId} options={pOptions} />
-              <ImageField label="Main image" name="mediaUrl" defaultValue={s.mediaUrl} spec="1200 × 1500 (4:5)" />
+              <ImageUpload label="Main image" name="mediaUrl" defaultValue={s.mediaUrl} spec="1200 × 1380" preset="editorial" />
               <TextArea label="Mini images (one URL per line, max 2)" name="miniUrls" defaultValue={s.miniUrls.join("\n")} rows={2} hint="800 × 800 each. Hidden on mobile by design." />
               <TextArea label="Swatch chips" name="swatches" defaultValue={swatches} rows={2} hint="One per line, format Label:#HEX — e.g. Antique Brass:#C9A24B" />
               <div className="grid gap-2 sm:grid-cols-2">

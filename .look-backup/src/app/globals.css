@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * =============================================================================
+ * globals.css — DELIBERATELY SMALL
+ * =============================================================================
+ * All visual design lives in tailwind.config.ts and in utility classes on the
+ * components. This file holds only three things:
+ *
+ *   1. CSS variables, mirroring the Tailwind palette, so arbitrary values like
+ *      `border-[color:var(--line)]` keep working (the admin panel uses these).
+ *   2. Base element defaults that cannot be expressed as utilities.
+ *   3. Two tiny helpers that need a media query or an observer class.
+ *
+ * Do NOT add component classes here. If a rule would beat a Tailwind utility,
+ * it belongs in a component's className instead — mixing the two means the
+ * later one silently wins and elements start overlapping.
+ */
+
+:root {
+  --onyx: #120d0a;
+  --ink: #241c15;
+  --ink-soft: #4a3b2e;
+  --maroon: #8a2226;
+  --maroon-deep: #5a0f12;
+  --maroon-soft: #f3e6e2;
+  --gold: #c9a24b;
+  --gold-deep: #7e5a25;
+  --gold-pale: #e7d3b1;
+  --rose: #c98a93;
+  --header: #fdf0f1;
+  --forest: #2f6b4f;
+  --beige: #fcebec;
+  --beige-deep: #f8dde0;
+  --cream: #fdf1f2;
+  --paper: #ffffff;
+  --muted: rgba(36, 28, 21, 0.68);
+  --faint: rgba(36, 28, 21, 0.42);
+  --line: rgba(138, 34, 38, 0.13);
+  --line-gold: rgba(201, 162, 75, 0.42);
+}
+
+@layer base {
+  /* ---------------------------------------------------------------------
+     PAGE TEXTURE
+     ---------------------------------------------------------------------
+     Damask motif, painted by body::before as a fixed layer behind all
+     content. Its strength is one number: --texture.
+
+     The reference artwork runs its damask at a drift of 73 RGB points, which
+     is right for wrapping paper and far too strong behind body copy. Same
+     motif here, rendered quietly:
+
+       0.12  drift 12  starts to compete with text
+       0.08  drift  8  <- current: present, never fights the type
+       0.05  drift  5  barely there
+
+     One thing to check before copying any printed reference: whether its
+     pattern lines are LIGHTER or DARKER than the field. The brick sheet's
+     mortar lines were lighter; drawing them dark made it look wrong.
+     --------------------------------------------------------------------- */
+  :root {
+    --texture: 0.08;
+  }
+
+  html {
+    /* Even baby-pink field. The reference is uniform — at this lightness a
+       corner vignette reads as a smudge rather than watercolour. */
+    background-color: #FCEBEC;
+    background-image: linear-gradient(180deg, #FDF1F2 0%, #FCEBEC 26%, #FCEBEC 74%, #FAE4E6 100%);
+    background-attachment: fixed;
+  }
+
+  body {
+    @apply text-ink font-sans text-[15px] leading-relaxed antialiased;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* The texture sits at z-index -1: above the page gradient, below every
+     element. pointer-events:none so it can never intercept a click. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: theme("backgroundImage.damask");
+    background-repeat: repeat;
+    background-size: 180px 240px;
+    opacity: var(--texture);
+  }
+
+  /* A fixed layer repaints on every scroll frame on iOS, so let both scroll. */
+  @media (max-width: 640px) {
+    html { background-attachment: scroll; }
+    /* inset:0 already stretches this to the full body height; height:100%
+       would resolve against an auto-height parent. */
+    body::before { position: absolute; background-size: 150px 200px; }
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-serif font-semibold;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    @apply bg-gold text-onyx;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-[3px] outline-gold rounded-[2px];
+    outline-style: solid;
+  }
+
+  /* Hide the scrollbar on horizontal product rails without losing scrolling. */
+  .no-bar::-webkit-scrollbar { height: 0; width: 0; }
+  .no-bar { scrollbar-width: none; }
+}
+
+/* Scroll-reveal. The `.in` class is added by components/ui/Reveal.tsx. */
+@layer utilities {
+  .reveal {
+    @apply opacity-0 translate-y-5 transition-[opacity,transform] duration-700 ease-silk;
+  }
+  .reveal.in {
+    @apply opacity-100 translate-y-0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

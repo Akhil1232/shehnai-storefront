@@ -6,6 +6,7 @@ import "../globals.css";
 const NAV = [
   ["/admin", "Dashboard"],
   ["/admin/products", "Products"],
+  ["/admin/collections", "Collections"],
   ["/admin/inventory", "Inventory"],
   ["/admin/orders", "Orders"],
   ["/admin/banners", "Banners"],

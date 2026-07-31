@@ -18,9 +18,9 @@ export async function middleware(req: NextRequest) {
       /* fall through to redirect */
     }
   }
-
-  const url = req.nextUrl.clone();
-  url.pathname = "/admin/login";
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
+  const proto = req.headers.get("x-forwarded-proto") ?? "https";
+  const url = new URL(`${proto}://${host}/admin/login`);
   url.searchParams.set("next", pathname);
   return NextResponse.redirect(url);
 }

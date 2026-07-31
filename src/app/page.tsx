@@ -31,7 +31,13 @@ export default async function HomePage() {
     prisma.product.findMany({ where: { status: "PUBLISHED", badge: "NEW" }, select: cardProductSelect, orderBy: { createdAt: "desc" }, take: 8 }),
     prisma.product.findMany({ where: { status: "PUBLISHED", isFeatured: true }, select: cardProductSelect, orderBy: { ratingAvg: "desc" }, take: 8 }),
     prisma.review.findMany({ where: { isPublished: true, isFeatured: true }, orderBy: { createdAt: "desc" }, take: 8 }),
-    prisma.banner.findFirst({ where: { placement: "HOME_TRIPTYCH", isActive: true }, orderBy: { sortOrder: "asc" } }),
+    // HOME_HERO is the current placement. HOME_TRIPTYCH is the legacy name
+    // from the old three-panel hero; it is still accepted so banners created
+    // before the redesign keep working.
+    prisma.banner.findFirst({
+      where: { placement: { in: ["HOME_HERO", "HOME_TRIPTYCH"] }, isActive: true },
+      orderBy: [{ placement: "asc" }, { sortOrder: "asc" }],
+    }),
   ]);
 
   const editorial = sections[0];

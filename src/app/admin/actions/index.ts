@@ -108,6 +108,65 @@ export async function deleteProduct(formData: FormData) {
   redirect("/admin/products");
 }
 
+// -------------------------------------------------------------- collections --
+
+/**
+ * The four collections (Men's, Women's, Murti Sringaar, Wedding).
+ * `bannerUrl` here is the image on the home page collection card — it is NOT
+ * the wide strip on the collection page itself, which is a CATEGORY_HEADER
+ * banner. Two different images, two different places.
+ */
+export async function saveVertical(formData: FormData) {
+  await requireAdmin();
+  await prisma.vertical.update({
+    where: { id: str(formData, "id")! },
+    data: {
+      name: str(formData, "name")!,
+      devName: str(formData, "devName"),
+      description: str(formData, "description"),
+      bannerUrl: str(formData, "bannerUrl"),
+      sortOrder: num(formData, "sortOrder") ?? 0,
+      isActive: bool(formData, "isActive"),
+    },
+  });
+  refresh("/admin/collections");
+}
+
+export async function saveCategory(formData: FormData) {
+  await requireAdmin();
+  const id = str(formData, "id");
+  const data = {
+    name: str(formData, "name")!,
+    devName: str(formData, "devName"),
+    sortOrder: num(formData, "sortOrder") ?? 0,
+    isActive: bool(formData, "isActive"),
+  };
+  if (id) {
+    await prisma.category.update({ where: { id }, data });
+  } else {
+    await prisma.category.create({
+      data: {
+        ...data,
+        slug: str(formData, "slug") ?? slugify(data.name),
+        verticalId: str(formData, "verticalId")!,
+      },
+    });
+  }
+  refresh("/admin/collections");
+}
+
+export async function deleteCategory(formData: FormData) {
+  await requireAdmin(["OWNER", "ADMIN"]);
+  const id = String(formData.get("id"));
+  const count = await prisma.product.count({ where: { categoryId: id } });
+  if (count > 0) {
+    // Deleting would orphan the products, so refuse rather than lose the link.
+    throw new Error(`That sub-category still has ${count} product(s). Move them first.`);
+  }
+  await prisma.category.delete({ where: { id } });
+  refresh("/admin/collections");
+}
+
 // ----------------------------------------------------------------- variants --
 
 export async function saveVariant(formData: FormData) {

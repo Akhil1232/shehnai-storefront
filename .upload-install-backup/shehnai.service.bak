@@ -1,0 +1,44 @@
+[Unit]
+Description=Shehnai storefront (Next.js)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/shehnai-storefront
+EnvironmentFile=/home/ubuntu/shehnai-storefront/.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+
+# Next is called directly rather than through `npm run start`. npm adds a
+# wrapper process that does not forward SIGTERM cleanly, so a restart can leave
+# the old server still holding port 3000. It also avoids npm needing a
+# writable ~/.npm, which ProtectHome=read-only would deny.
+ExecStart=/usr/bin/node /home/ubuntu/shehnai-storefront/node_modules/.bin/next start --hostname 127.0.0.1 --port 3000
+
+Restart=always
+RestartSec=5
+# Keep the unit alive if the kernel kills a child under memory pressure.
+OOMPolicy=continue
+
+# --- hardening -------------------------------------------------------------
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+# The app lives under /home, so /home cannot be hidden outright. It is made
+# read-only and only the app directory is writable — Next writes .next/cache
+# at runtime.
+ProtectHome=read-only
+ReadWritePaths=/home/ubuntu/shehnai-storefront
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=shehnai
+
+[Install]
+WantedBy=multi-user.target

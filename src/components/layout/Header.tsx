@@ -31,7 +31,7 @@ export default function Header({ verticals }: { verticals: NavVertical[] }) {
   const [mega, setMega] = useState<string | null>(null);
 
   return (
-    <header className="sticky top-0 z-header border-b border-line bg-[#F3E9D3]/95 backdrop-blur-md">
+    <header className="sticky top-0 z-header border-b border-line bg-[#FCF3F0]/95 backdrop-blur-md">
       <div className={cx(wrap, "flex h-16 items-center gap-2")}>
         <button onClick={ui.openMenu} aria-label="Open menu" className={cx(iconBtn, "lg:hidden")}>
           <Icon name="menu" />

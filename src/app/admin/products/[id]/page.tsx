@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { isUploadedImage } from "@/lib/image-source";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
@@ -7,7 +8,8 @@ import {
   saveProduct, deleteProduct, saveVariant,
   addImage, deleteImage, moveImage,
 } from "../../actions";
-import { Card, Field, TextArea, Select, Checkbox, ImageField, SubmitButton } from "@/components/admin/ui";
+import { Card, Field, TextArea, Select, Checkbox, SubmitButton } from "@/components/admin/ui";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 export const dynamic = "force-dynamic";
 
@@ -138,7 +140,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
             {product.images.map((im, i) => (
               <div key={im.id} className="mb-2 flex gap-2 rounded border border-[color:var(--line)] p-2">
                 <div className="relative h-16 w-16 flex-none overflow-hidden rounded bg-neutral-200">
-                  <Image src={im.url} alt="" fill sizes="64px" className="object-cover" />
+                  <Image src={im.url} alt="" fill sizes="64px" unoptimized={isUploadedImage(im.url)} className="object-cover" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[11px] text-[color:var(--muted)]">{im.url}</p>
@@ -166,7 +168,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
             ))}
             <form action={addImage} className="mt-3 grid gap-2 border-t border-[color:var(--line)] pt-3">
               <input type="hidden" name="productId" value={product.id} />
-              <ImageField label="Image URL" name="url" spec="2000 × 2000" />
+              <ImageUpload label="Product image" name="url" spec="2000 × 2000" preset="product" />
               <Field label="Alt text" name="alt" />
               <Checkbox label="Real studio photograph (not a render)" name="isStudioPhoto" />
               <SubmitButton>Add image</SubmitButton>

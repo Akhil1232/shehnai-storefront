@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { cardProductSelect } from "@/types/catalog";
 import ProductGrid from "@/components/product/ProductGrid";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
+import ProductMedia from "@/components/ui/ProductMedia";
 import Rule from "@/components/ui/Rule";
 import { FilterSidebar, FilterBar, FilterChips, SortToolbar, PRICE_BANDS } from "@/components/collection/Filters";
 import { cx, wrap } from "@/lib/styles";
@@ -59,7 +60,7 @@ export default async function CollectionPage({
 
   const sortKey = sp.sort ?? "featured";
 
-  const [products, catCounts] = await Promise.all([
+  const [products, catCounts, header] = await Promise.all([
     prisma.product.findMany({ where, select: cardProductSelect, orderBy: ORDER[sortKey] ?? ORDER.featured, take: 120 }),
     vertical
       ? prisma.product.groupBy({
@@ -68,6 +69,14 @@ export default async function CollectionPage({
           _count: { _all: true },
         })
       : Promise.resolve([] as { categoryId: string | null; _count: { _all: number } }[]),
+    // Optional banner strip for this collection. Set it in Admin -> Banners
+    // with placement CATEGORY_HEADER and this vertical selected.
+    vertical
+      ? prisma.banner.findFirst({
+          where: { placement: "CATEGORY_HEADER", isActive: true, verticalId: vertical.id },
+          orderBy: { sortOrder: "asc" },
+        })
+      : Promise.resolve(null),
   ]);
 
   // Prisma cannot order by a field across a to-many relation, so price sorting
@@ -97,6 +106,15 @@ export default async function CollectionPage({
   return (
     <div className={wrap}>
       <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: title }]} />
+
+      {/* Desktop only: on a phone a 3:1 banner pushes the products below the
+          fold for no real gain. */}
+      {header?.desktopUrl && (
+        <div className="relative mb-5 hidden aspect-[3/1] w-full overflow-hidden rounded border border-line-gold md:block">
+          <ProductMedia url={header.desktopUrl} alt={header.alt || title}
+                        seed={`cat-${slug}`} priority sizes="100vw" />
+        </div>
+      )}
 
       <div className="border-b border-line pb-4">
         <h1 className="text-h1">{title}</h1>

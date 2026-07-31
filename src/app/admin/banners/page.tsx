@@ -1,16 +1,42 @@
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { saveBanner, deleteBanner } from "../actions";
-import { Card, Field, Select, Checkbox, ImageField, SubmitButton } from "@/components/admin/ui";
+import { Card, Field, Select, Checkbox, SubmitButton } from "@/components/admin/ui";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 export const dynamic = "force-dynamic";
 
 /** Placement -> required image sizes, shown on the form so nobody has to guess. */
-const SPEC: Record<string, { desktop: string; mobile: string; note: string }> = {
-  HOME_HERO: { desktop: "2400 × 1000", mobile: "1080 × 1350", note: "Keep the subject right-of-centre; copy overlays on the left." },
-  HOME_TRIPTYCH: { desktop: "900 × 1200", mobile: "900 × 1200", note: "Exactly 3 active. sortOrder 0 = left, 1 = CENTRE (largest), 2 = right." },
-  CATEGORY_HEADER: { desktop: "1920 × 640", mobile: "1080 × 720", note: "Pick a vertical below, or it won't appear anywhere." },
-  PROMO_STRIP: { desktop: "text only", mobile: "text only", note: "Uses the Title field only." },
+type Preset = "hero" | "category" | "free";
+
+/**
+ * Each placement below is read by exactly one part of the storefront. If a
+ * placement is not listed here it does nothing — that is why HOME_TRIPTYCH and
+ * PROMO_STRIP were removed.
+ */
+const SPEC: Record<string, {
+  title: string; desktop: string; mobile: string;
+  where: string; note: string; preset: Preset; needsVertical?: boolean;
+}> = {
+  HOME_HERO: {
+    title: "Home page — main image",
+    desktop: "1200 × 1400", mobile: "1080 × 1260", preset: "hero",
+    where: "The large arched image beside the headline on the home page.",
+    note: "PORTRAIT, not landscape. The top ~25% curves away behind the arch — keep it empty. Only the first active one is shown; use Sort order to choose which.",
+  },
+  CATEGORY_HEADER: {
+    title: "Collection page — banner strip",
+    desktop: "1920 × 640", mobile: "1080 × 720", preset: "category",
+    where: "A wide strip above the product grid on one collection page.",
+    note: "You MUST pick a Vertical below, or it has nowhere to appear. Desktop only — hidden on phones so products stay above the fold.",
+    needsVertical: true,
+  },
+};
+
+/** Placements that used to exist. Kept only so old rows can still be edited. */
+const LEGACY: Record<string, string> = {
+  HOME_TRIPTYCH: "Legacy — the old three-panel hero. Still shown as the home image if no HOME_HERO exists. Switch it to HOME_HERO.",
+  PROMO_STRIP: "Not used. The announcement bar text lives in Settings, not here.",
 };
 
 const PLACEMENTS = Object.keys(SPEC);
@@ -34,18 +60,26 @@ export default async function BannersPage() {
 
       <div className="mb-5 grid gap-3 lg:grid-cols-2">
         {banners.map((b) => {
-          const spec = SPEC[b.placement];
+          const spec = SPEC[b.placement] ?? {
+          title: b.placement, desktop: "—", mobile: "—", preset: "free" as Preset,
+          where: LEGACY[b.placement] ?? "Unknown placement.", note: "",
+        };
           return (
-            <Card key={b.id} title={`${b.placement} · #${b.sortOrder}`}>
+            <Card key={b.id} title={`${spec.title} · #${b.sortOrder}`}>
               <form action={saveBanner} className="grid gap-2.5">
                 <input type="hidden" name="id" value={b.id} />
                 <Select label="Placement" name="placement" defaultValue={b.placement}
-                  options={PLACEMENTS.map((p) => ({ value: p, label: p }))} />
-                <p className="rounded bg-[#EFE3CB] px-2 py-1.5 text-[11.5px] text-maroon">{spec.note}</p>
+                  options={PLACEMENTS.map((p) => ({ value: p, label: SPEC[p].title }))} />
+                <p className="rounded bg-[#F4F1EA] px-2 py-1.5 text-[11.5px]">
+                  <b>Where this appears:</b> {spec.where}
+                </p>
+                {spec.note && (
+                  <p className="rounded bg-[#EFE3CB] px-2 py-1.5 text-[11.5px] text-maroon">{spec.note}</p>
+                )}
                 <Field label="Title" name="title" defaultValue={b.title} />
                 <Field label="Subtitle" name="subtitle" defaultValue={b.subtitle} />
-                <ImageField label="Desktop image" name="desktopUrl" defaultValue={b.desktopUrl} spec={spec.desktop} />
-                <ImageField label="Mobile image" name="mobileUrl" defaultValue={b.mobileUrl} spec={spec.mobile} />
+                <ImageUpload label="Desktop image" name="desktopUrl" defaultValue={b.desktopUrl} spec={spec.desktop} preset={spec.preset} />
+                <ImageUpload label="Mobile image" name="mobileUrl" defaultValue={b.mobileUrl} spec={spec.mobile} preset={spec.preset} />
                 <Field label="Alt text" name="alt" defaultValue={b.alt} />
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Field label="Link" name="href" defaultValue={b.href} hint="/collections/murti" />
@@ -69,10 +103,10 @@ export default async function BannersPage() {
 
       <Card title="Add a banner">
         <form action={saveBanner} className="grid max-w-[520px] gap-2.5">
-          <Select label="Placement" name="placement" options={PLACEMENTS.map((p) => ({ value: p, label: p }))} />
+          <Select label="Placement" name="placement" options={PLACEMENTS.map((p) => ({ value: p, label: SPEC[p].title }))} />
           <Field label="Title" name="title" />
-          <ImageField label="Desktop image" name="desktopUrl" spec="see placement above" />
-          <ImageField label="Mobile image" name="mobileUrl" spec="see placement above" />
+          <ImageUpload label="Desktop image" name="desktopUrl" spec="see placement above" preset="free" />
+          <ImageUpload label="Mobile image" name="mobileUrl" spec="see placement above" preset="free" />
           <Field label="Alt text" name="alt" />
           <Field label="Link" name="href" />
           <Select label="Vertical" name="verticalId" options={vOptions} />
