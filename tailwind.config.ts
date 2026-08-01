@@ -82,7 +82,7 @@ export default {
       // Named layers, so nothing ever guesses a z-index. Ordered bottom to top.
       zIndex: {
         bar: "30",      // sticky filter/sort bar
-        header: "#FDF6F7", // sticky header / floating bars
+        header: "40",   // sticky site header
         buybar: "45",   // floating buy bar (sits below the tab bar)
         tabbar: "50",   // mobile bottom navigation
         backdrop: "60",
