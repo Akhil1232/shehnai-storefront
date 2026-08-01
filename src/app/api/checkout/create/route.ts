@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { razorpay } from "@/lib/razorpay";
-import { getSettings, shippingFor } from "@/lib/settings";
+import { getSettings } from "@/lib/settings";
+import { computeShipping } from "@/lib/shipping";
 import { reserveStock } from "@/lib/inventory";
 import { orderNumber } from "@/lib/slug";
 
@@ -83,7 +84,34 @@ export async function POST(req: Request) {
       }
     }
 
-    const shippingPaise = shippingFor(subtotalPaise - discountPaise, settings);
+    // --- shipping: live Delhivery quote, flat rate as fallback -----------
+    const weightGrams =
+      items.reduce((sum, i) => {
+        const v = variants.find((x) => x.id === i.variantId)!;
+        return sum + (v.product.weightGrams ?? 150) * i.qty;
+      }, 0) || 500;
+
+    const shipQuote = await computeShipping({
+      subtotalPaise: subtotalPaise - discountPaise,
+      weightGrams,
+      pincode: body.address.pincode,
+      paymentMethod: body.paymentMethod,
+      settings,
+    });
+    if (!shipQuote.serviceable) {
+      return NextResponse.json(
+        { error: "Sorry, we don't currently deliver to this PIN code." },
+        { status: 400 }
+      );
+    }
+    if (body.paymentMethod === "COD" && !shipQuote.codAvailable) {
+      return NextResponse.json(
+        { error: "Cash on Delivery isn't available for this PIN code. Please pay online instead." },
+        { status: 400 }
+      );
+    }
+
+    const shippingPaise = shipQuote.shippingPaise;
     const codFee = body.paymentMethod === "COD" ? settings.codFeePaise : 0;
     const totalPaise = subtotalPaise - discountPaise + shippingPaise + codFee;
 

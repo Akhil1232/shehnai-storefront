@@ -104,7 +104,7 @@ export default function AddToCart({ product }: { product: FullProduct }) {
           {/* Floating buy bar, mobile only. */}
           <div className={cx(
             "fixed inset-x-0 bottom-0 z-buybar flex items-center gap-2.5 border-t border-line-gold",
-            "bg-[#FCF3F0]/97 px-4 pb-[calc(0.625rem+env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-md transition-transform duration-300 ease-silk lg:hidden",
+            "bg-[#FDF6F7]/97 px-4 pb-[calc(0.625rem+env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-md transition-transform duration-300 ease-silk lg:hidden",
             showBar ? "translate-y-0" : "translate-y-[130%]"
           )}>
             <div className="flex-none">

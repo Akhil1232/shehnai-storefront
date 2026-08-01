@@ -29,12 +29,12 @@
   --gold: #c9a24b;
   --gold-deep: #7e5a25;
   --gold-pale: #e7d3b1;
-  --rose: #d3a0a8;
-  --header: #fcf3f0;
+  --rose: #d9a8b0;
+  --header: #fdf6f7;
   --forest: #2f6b4f;
-  --beige: #fdfaf6;
-  --beige-deep: #f7e6e5;
-  --cream: #fcf4f1;
+  --beige: #fdfbfb;
+  --beige-deep: #fae3e6;
+  --cream: #fdf4f5;
   --paper: #ffffff;
   --muted: rgba(36, 28, 21, 0.68);
   --faint: rgba(36, 28, 21, 0.42);
@@ -46,40 +46,45 @@
   /* ---------------------------------------------------------------------
      PAGE BACKGROUND
      ---------------------------------------------------------------------
-     Three layers, in paint order:
+     Measured from the silk reference, which does three things:
 
-       1. a WARM WHITE field                     #FDFAF6
-       2. two soft blush pools, low opacity      #F6DCDF / #F9E7DC
-       3. a fine lattice ornament                --texture
+       centre  #FDFBFB   essentially white,  R-B  2
+       edges   #F8CED4   clear pink,         R-B 36
+       hue     349-355   true pink, on the COOL side of red
 
-     Why not a flat pink page: a flat fill tints every pixel behind the type,
-     so the copy is always fighting it. A warm white field with blush arriving
-     as a diffuse wash reads as pink overall, while the text itself sits on
-     something close to white. That is how the packaging works too — the blush
-     is an accent, not a flood.
+     A 43-point journey from the middle of the frame to its edges. That is the
+     whole trick: the page reads unmistakably pink because of the margins,
+     while every line of type sits on near-white.
 
-     The pools are large, soft and asymmetric on purpose. Symmetric corner
-     vignettes look like smudging; an off-centre wash looks like paper.
+     An earlier build ran hue 9-22 (peach/salmon, the ORANGE side of red) with
+     only 8 points of spread. Nothing was clean white, nothing was properly
+     pink, and it read warm-orange rather than blush.
 
-     --texture governs the ornament only:
+     The washes are anchored beyond the content column, which is centred and
+     capped at 1300px. Body text therefore lands where R-B is 15 or less.
 
-       0.09  visible at a glance
-       0.055 <- current: you see it when you look for it, not before
-       0.03  effectively invisible
-
-     Contrast never drops below 13:1 anywhere on the page, so this is a taste
-     control, not a legibility one.
+     Colour   #EFAEBC  hue 352
+     Depth    each gradient runs to `transparent 100%`, not 70%. A short stop
+              makes the wash fade out before it reaches the viewport edge, so
+              the margin never gets properly pink — the first attempt at this
+              only reached R-B 17 against the reference's 36. At a full stop
+              it reaches 32.
      --------------------------------------------------------------------- */
   :root {
-    --texture: 0.055;
+    --texture: 0.05;
   }
 
   html {
-    background-color: #FDFAF6;
+    background-color: #FDFBFB;
+
+    /* Four washes: a broad sweep down each side, plus softer corner blooms.
+       Asymmetric on purpose — a symmetric vignette looks like a lens artefact,
+       an uneven wash looks like fabric. */
     background-image:
-      radial-gradient(ellipse 80% 55% at 78% 0%,   rgba(246,220,223,.62), transparent 68%),
-      radial-gradient(ellipse 70% 50% at 12% 34%,  rgba(249,231,220,.50), transparent 66%),
-      radial-gradient(ellipse 95% 45% at 50% 100%, rgba(246,220,223,.55), transparent 70%);
+      radial-gradient(ellipse 38% 86% at -8% 30%,  #EFAEBC, transparent 100%),
+      radial-gradient(ellipse 36% 82% at 108% 68%, #EFAEBC, transparent 100%),
+      radial-gradient(ellipse 48% 34% at 88% -6%,  rgba(239,174,188,.72), transparent 100%),
+      radial-gradient(ellipse 54% 36% at 14% 106%, rgba(239,174,188,.78), transparent 100%);
     background-attachment: fixed;
   }
 
@@ -89,8 +94,8 @@
     overflow-x: hidden;
   }
 
-  /* Ornament sits at z-index -1: above the washes, below every element.
-     pointer-events:none so it can never intercept a click. */
+  /* Ornament: above the washes, below every element. pointer-events:none so
+     it can never intercept a click. */
   body::before {
     content: "";
     position: fixed;
@@ -103,9 +108,17 @@
     opacity: var(--texture);
   }
 
-  /* A fixed layer repaints on every scroll frame on iOS, so let both scroll. */
+  /* A fixed layer repaints on every scroll frame on iOS.
+     Narrow screens also get tighter washes — a 34%-wide gradient that reads as
+     an elegant margin on a desktop covers a third of a phone. */
   @media (max-width: 640px) {
-    html { background-attachment: scroll; }
+    html {
+      background-attachment: scroll;
+      background-image:
+        radial-gradient(ellipse 50% 42% at -12% 8%,  rgba(239,174,188,.92), transparent 100%),
+        radial-gradient(ellipse 48% 40% at 112% 52%, rgba(239,174,188,.90), transparent 100%),
+        radial-gradient(ellipse 64% 32% at 20% 102%, rgba(239,174,188,.80), transparent 100%);
+    }
     body::before { position: absolute; background-size: 84px 84px; }
   }
 

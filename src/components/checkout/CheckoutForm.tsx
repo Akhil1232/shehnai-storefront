@@ -43,6 +43,8 @@ export default function CheckoutForm({
   const [error, setError] = useState<string | null>(null);
   const [pinNote, setPinNote] = useState<{ ok: boolean; text: string } | null>(null);
   const [bad, setBad] = useState<Set<keyof Form>>(new Set());
+  const [shipQuote, setShipQuote] = useState<{ shippingPaise: number; serviceable: boolean; codAvailable: boolean } | null>(null);
+  const [quoting, setQuoting] = useState(false);
   const line1Ref = useRef<HTMLInputElement>(null);
 
   /* Returning customers should never type their address twice. */
@@ -78,8 +80,49 @@ export default function CheckoutForm({
     } catch { setPinNote({ ok: false, text: "Please fill city and state yourself." }); }
   }
 
+  const pincode = f.pincode.replace(/\D/g, "");
+
+  /* Real shipping cost, quoted from Delhivery for the exact destination. Falls
+   * back to the flat/free rule below until the quote lands (or if it fails),
+   * so the summary never shows a blank figure. */
+  useEffect(() => {
+    if (pincode.length !== 6 || !lines.length) { setShipQuote(null); return; }
+    const ctrl = new AbortController();
+    const t = setTimeout(async () => {
+      setQuoting(true);
+      try {
+        const res = await fetch("/api/checkout/shipping-quote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: ctrl.signal,
+          body: JSON.stringify({
+            items: lines.map((l) => ({ variantId: l.variantId, qty: l.qty })),
+            pincode, paymentMethod: method,
+          }),
+        });
+        const data = await res.json();
+        setShipQuote(res.ok ? data : null);
+      } catch {
+        // Aborted or network error — keep showing the flat-rate estimate.
+      } finally {
+        setQuoting(false);
+      }
+    }, 400);
+    return () => { ctrl.abort(); clearTimeout(t); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pincode, method, lines]);
+
+  const notServiceable = shipQuote?.serviceable === false;
+  const codBlocked = shipQuote?.codAvailable === false;
+
+  /* Delhivery says COD can't be fulfilled here — don't leave the customer on
+   * a payment method that will fail at order creation. */
+  useEffect(() => {
+    if (codBlocked && method === "COD") setMethod("RAZORPAY");
+  }, [codBlocked, method]);
+
   const subtotal = lines.reduce((n, l) => n + l.pricePaise * l.qty, 0);
-  const shipping = subtotal >= freeShippingAt ? 0 : flatShipping;
+  const shipping = shipQuote ? shipQuote.shippingPaise : (subtotal >= freeShippingAt ? 0 : flatShipping);
   const fee = method === "COD" ? codFee : 0;
   const total = subtotal + shipping + fee;
 
@@ -92,6 +135,10 @@ export default function CheckoutForm({
       const first = document.getElementById(`f-${[...failed][0]}`);
       first?.scrollIntoView({ block: "center", behavior: "smooth" });
       first?.focus();
+      return;
+    }
+    if (notServiceable) {
+      setError("Sorry, we don't currently deliver to this PIN code.");
       return;
     }
 
@@ -196,6 +243,11 @@ export default function CheckoutForm({
                       {pinNote.text}
                     </span>
                   )}
+                  {notServiceable && (
+                    <span className="mt-1 block text-[11.5px] font-semibold text-maroon">
+                      Sorry, we don&apos;t currently deliver to this PIN code.
+                    </span>
+                  )}
                 </div>
                 <Field k="city" label="City" autoComplete="address-level2" placeholder="Auto-filled from PIN" />
                 <div className="sm:col-span-2">
@@ -215,23 +267,29 @@ export default function CheckoutForm({
               {([
                 ["RAZORPAY", "Pay online", "UPI · Cards · Net Banking · Wallets"],
                 ...(codEnabled
-                  ? [["COD", "Cash on Delivery", codFee > 0 ? `+ ${formatINR(codFee)} handling` : "Available on most PIN codes"] as const]
+                  ? [["COD", "Cash on Delivery",
+                      codBlocked ? "Not available for this PIN code"
+                        : codFee > 0 ? `+ ${formatINR(codFee)} handling` : "Available on most PIN codes"] as const]
                   : []),
-              ] as const).map(([key, title, sub]) => (
-                <label key={key} onClick={() => setMethod(key as "RAZORPAY" | "COD")}
-                       className={cx(
-                         "mb-2 flex cursor-pointer items-start gap-3 rounded border bg-paper p-3.5 transition-all",
-                         method === key ? "border-gold ring-1 ring-gold" : "border-line hover:border-gold/60"
-                       )}>
-                  <input type="radio" name="pay" checked={method === key}
-                         onChange={() => setMethod(key as "RAZORPAY" | "COD")}
-                         className="mt-0.5 h-[18px] w-[18px] accent-maroon" />
-                  <span>
-                    <b className="block text-sm">{title}</b>
-                    <span className="text-xs text-muted">{sub}</span>
-                  </span>
-                </label>
-              ))}
+              ] as const).map(([key, title, sub]) => {
+                const disabled = key === "COD" && codBlocked;
+                return (
+                  <label key={key} onClick={() => !disabled && setMethod(key as "RAZORPAY" | "COD")}
+                         className={cx(
+                           "mb-2 flex items-start gap-3 rounded border bg-paper p-3.5 transition-all",
+                           disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+                           method === key ? "border-gold ring-1 ring-gold" : "border-line hover:border-gold/60"
+                         )}>
+                    <input type="radio" name="pay" checked={method === key} disabled={disabled}
+                           onChange={() => setMethod(key as "RAZORPAY" | "COD")}
+                           className="mt-0.5 h-[18px] w-[18px] accent-maroon" />
+                    <span>
+                      <b className="block text-sm">{title}</b>
+                      <span className="text-xs text-muted">{sub}</span>
+                    </span>
+                  </label>
+                );
+              })}
             </div>
 
             <PolicyNote />
@@ -251,13 +309,15 @@ export default function CheckoutForm({
             </div>
             <div className={summaryRow}>
               <span>Shipping</span>
-              <span className={shipping ? "" : "font-bold text-forest"}>{shipping ? formatINR(shipping) : "FREE"}</span>
+              <span className={shipping ? "" : "font-bold text-forest"}>
+                {quoting ? "Calculating…" : shipping ? formatINR(shipping) : "FREE"}
+              </span>
             </div>
             {fee > 0 && <div className={summaryRow}><span>COD fee</span><span>{formatINR(fee)}</span></div>}
             <div className={summaryTotal}><span>Total</span><b className="text-maroon">{formatINR(total)}</b></div>
 
-            <button onClick={placeOrder} disabled={busy} className={cx(btn.primary, btnFull, "mt-3.5")}>
-              {busy ? "Please wait…" : method === "COD" ? "Place Order" : `Pay ${formatINR(total)}`}
+            <button onClick={placeOrder} disabled={busy || notServiceable} className={cx(btn.primary, btnFull, "mt-3.5")}>
+              {busy ? "Please wait…" : notServiceable ? "Not deliverable to this PIN code" : method === "COD" ? "Place Order" : `Pay ${formatINR(total)}`}
             </button>
             <p className="mt-2 text-center text-[11px] text-muted">
               Amount is recalculated on our server before you are charged.
@@ -267,13 +327,13 @@ export default function CheckoutForm({
       </div>
 
       {/* Sticky pay bar, mobile only. Sits above the tab bar, never under it. */}
-      <div className="fixed inset-x-0 bottom-0 z-buybar flex items-center gap-2.5 border-t border-line-gold bg-[#FCF3F0]/97 px-4 pb-[calc(0.625rem+env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-md lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-buybar flex items-center gap-2.5 border-t border-line-gold bg-[#FDF6F7]/97 px-4 pb-[calc(0.625rem+env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-md lg:hidden">
         <div className="flex-none">
           <b className="block text-base text-maroon">{formatINR(total)}</b>
           <span className="text-[10px] text-muted">{shipping ? "incl. shipping" : "free shipping"}</span>
         </div>
-        <button onClick={placeOrder} disabled={busy} className={cx(btn.primary, "flex-1")}>
-          {busy ? "Please wait…" : method === "COD" ? "Place Order" : "Pay Now"}
+        <button onClick={placeOrder} disabled={busy || notServiceable} className={cx(btn.primary, "flex-1")}>
+          {busy ? "Please wait…" : notServiceable ? "Not deliverable here" : method === "COD" ? "Place Order" : "Pay Now"}
         </button>
       </div>
     </>

@@ -98,7 +98,7 @@ export function FilterBar({ categories }: { categories: Cat[] }) {
 
   return (
     <>
-      <div className="sticky top-16 z-bar flex gap-2.5 border-b border-line bg-[#FDF0F1]/96 py-2.5 backdrop-blur-md lg:hidden">
+      <div className="sticky top-16 z-bar flex gap-2.5 border-b border-line bg-[#FCF3F0]/96 py-2.5 backdrop-blur-md lg:hidden">
         <button onClick={ui.openFilter} className={barBtn}>
           Filter {active > 0 && <span className="h-1.5 w-1.5 rounded-full bg-maroon" />}
         </button>

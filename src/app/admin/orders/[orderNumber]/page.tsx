@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { formatINR } from "@/lib/money";
-import { updateOrder } from "../../actions";
+import { updateOrder, shipWithDelhivery } from "../../actions";
 import { Card, Field, TextArea, Select, SubmitButton } from "@/components/admin/ui";
+import { DelhiveryTrackButton } from "@/components/admin/DelhiveryTrackButton";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +57,20 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
           </Card>
 
           <Card title="Fulfilment">
-            <form action={updateOrder} className="grid max-w-[420px] gap-2.5">
+            {!order.trackingNumber && (order.status === "CONFIRMED" || order.status === "PACKED") && (
+              <form action={shipWithDelhivery} className="mb-4 border-b border-[color:var(--line)] pb-4">
+                <input type="hidden" name="orderNumber" value={order.orderNumber} />
+                <p className="mb-2 text-[12.5px] text-[color:var(--muted)]">
+                  No shipment booked yet. This calls Delhivery, generates a waybill, and fills in the
+                  carrier/tracking fields below automatically.
+                </p>
+                <SubmitButton>Create Delhivery shipment</SubmitButton>
+              </form>
+            )}
+            {order.trackingNumber && order.carrier === "Delhivery" && (
+              <DelhiveryTrackButton waybill={order.trackingNumber} />
+            )}
+            <form action={updateOrder} className="mt-3 grid max-w-[420px] gap-2.5">
               <input type="hidden" name="orderNumber" value={order.orderNumber} />
               <Select label="Status" name="status" defaultValue={order.status}
                 options={["PENDING", "CONFIRMED", "PACKED", "SHIPPED", "DELIVERED", "CANCELLED", "RETURNED"].map((s) => ({ value: s, label: s }))} />

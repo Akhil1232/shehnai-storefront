@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { applyStockMovement } from "@/lib/inventory";
 import { slugify, buildSku } from "@/lib/slug";
+import { createShipment } from "@/lib/delhivery";
 import type { StockReason, Badge, ProductStatus, BannerPlacement } from "@prisma/client";
 
 /**
@@ -359,6 +360,50 @@ export async function updateOrder(formData: FormData) {
       trackingNumber: str(formData, "trackingNumber"),
       carrier: str(formData, "carrier"),
       notes: str(formData, "notes"),
+    },
+  });
+  refresh(`/admin/orders/${orderNumber}`);
+}
+
+/**
+ * Books the shipment with Delhivery and stores the returned waybill as the
+ * order's tracking number. Requires DELHIVERY_API_TOKEN and
+ * DELHIVERY_PICKUP_LOCATION to be configured — see .env.example.
+ */
+export async function shipWithDelhivery(formData: FormData) {
+  await requireAdmin();
+  const orderNumber = String(formData.get("orderNumber"));
+
+  const order = await prisma.order.findUnique({
+    where: { orderNumber },
+    include: { items: { include: { variant: { include: { product: true } } } } },
+  });
+  if (!order) throw new Error("Order not found.");
+  if (order.trackingNumber) throw new Error("This order already has a tracking number.");
+
+  const address = order.shippingAddress as {
+    name: string; phone: string; line1: string; line2?: string;
+    city: string; state: string; pincode: string;
+  };
+
+  const weightGrams =
+    order.items.reduce((sum, i) => sum + (i.variant?.product?.weightGrams ?? 150) * i.qty, 0) || 500;
+
+  const { waybill } = await createShipment({
+    orderNumber: order.orderNumber,
+    paymentMethod: order.paymentMethod,
+    totalPaise: order.totalPaise,
+    address,
+    items: order.items.map((i) => ({ productName: i.productName, qty: i.qty })),
+    weightGrams,
+  });
+
+  await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      carrier: "Delhivery",
+      trackingNumber: waybill,
+      status: order.status === "CONFIRMED" ? "PACKED" : order.status,
     },
   });
   refresh(`/admin/orders/${orderNumber}`);

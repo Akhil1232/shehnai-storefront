@@ -11,20 +11,20 @@
 #    bag, collections) is already in the header and the menu drawer, so it was
 #    a second copy taking up screen height.
 #
-# 2. Rebuilds the background as three layers rather than a flat colour:
+# 2. Rebuilds the background from the silk reference, which was measured
+#    rather than eyeballed:
 #
-#      1. a WARM WHITE field                #FDFAF6
-#      2. three soft blush / beige pools    large, diffuse, asymmetric
-#      3. a fine lattice ornament           drift 5 - visible only on a look
+#      centre  #FDFBFB   essentially white,  R-B  2
+#      edges   #F8D0D4   clear pink,         R-B 36
+#      hue     349-355   true pink, on the COOL side of red
 #
-#    Every earlier attempt used a flat pink page. That is the wrong shape of
-#    solution: a flat fill tints every pixel behind the type, so the copy is
-#    permanently fighting the background. A warm white field with blush
-#    arriving as a wash reads as pink overall while the text itself sits on
-#    something close to white - which is how the packaging works too.
+#    A 43-point journey from the middle of the frame to its edges. That is the
+#    whole trick: the page reads unmistakably pink because of its margins,
+#    while every line of type sits on near-white.
 #
-#    Ornament scale was also wrong before. At drift 5 a large damask reads as
-#    uneven blotches; a fine 96px motif reads as paper grain.
+#    The previous build measured hue 9-22 - peach/salmon, the ORANGE side of
+#    red - with only 8 points of spread. Nothing was clean white and nothing
+#    was properly pink, so it read warm-orange rather than blush.
 #
 # Safe to re-run.  Undo instructions print at the end.
 # =============================================================================
@@ -91,19 +91,19 @@ export default {
         ink: { DEFAULT: "#241C15", soft: "#4A3B2E" },
         maroon: { DEFAULT: "#8A2226", deep: "#5A0F12", soft: "#F3E6E2" },
         gold: { DEFAULT: "#C9A24B", deep: "#7E5A25", pale: "#E7D3B1" },
-        rose: "#D3A0A8", // ornament
+        rose: "#D9A8B0", // ornament
         forest: "#2F6B4F",
         // Blush-beige, taken from the packaging.
         // Warm white field. Blush arrives as a wash in globals.css,
         // not as a flat fill — that is what keeps text legible.
         beige: { DEFAULT: "#FDFAF6", deep: "#F7E6E5" },
-        cream: "#FCF4F1",
+        cream: "#FDF4F5",
         paper: "#FFFFFF",
         // Semantic aliases used for text and hairlines.
         muted: "rgba(36,28,21,.68)",
         faint: "rgba(36,28,21,.42)",
         line: { DEFAULT: "rgba(138,34,38,.13)", gold: "rgba(201,162,75,.42)" },
-        header: "#FCF3F0", // sticky header / floating bars
+        header: "#FDF6F7", // sticky header / floating bars
       },
       fontFamily: {
         serif: ["var(--font-serif)", "Georgia", "serif"],
@@ -134,12 +134,12 @@ export default {
         ornament: 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2796%27%20height%3D%2796%27%20viewBox%3D%270%200%2096%2096%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23D3A0A8%27%20stroke-width%3D%270.9%27%3E%3Cpath%20d%3D%27M0%2048.0%20L48.0%200%20L96%2048.0%20L48.0%2096%20Z%27%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%27%23D3A0A8%27%3E%3Cellipse%20cx%3D%2753.6%27%20cy%3D%2748.0%27%20rx%3D%272.30%27%20ry%3D%275.29%27%2F%3E%3Cellipse%20cx%3D%2742.4%27%20cy%3D%2748.0%27%20rx%3D%272.30%27%20ry%3D%275.29%27%2F%3E%3Cellipse%20cx%3D%2748.0%27%20cy%3D%2753.6%27%20rx%3D%275.29%27%20ry%3D%272.30%27%2F%3E%3Cellipse%20cx%3D%2748.0%27%20cy%3D%2742.4%27%20rx%3D%275.29%27%20ry%3D%272.30%27%2F%3E%3Ccircle%20cx%3D%2748.0%27%20cy%3D%2748.0%27%20r%3D%271.5%27%2F%3E%3Cellipse%20cx%3D%275.6%27%20cy%3D%270.0%27%20rx%3D%272.30%27%20ry%3D%275.29%27%2F%3E%3Cellipse%20cx%3D%27-5.6%27%20cy%3D%270.0%27%20rx%3D%272.30%27%20ry%3D%275.29%27%2F%3E%3Cellipse%20cx%3D%270.0%27%20cy%3D%275.6%27%20rx%3D%275.29%27%20ry%3D%272.30%27%2F%3E%3Cellipse%20cx%3D%270.0%27%20cy%3D%27-5.6%27%20rx%3D%275.29%27%20ry%3D%272.30%27%2F%3E%3Ccircle%20cx%3D%270%27%20cy%3D%270%27%20r%3D%271.5%27%2F%3E%3Cellipse%20cx%3D%27101.6%27%20cy%3D%270.0%27%20rx%3D%272.30%27%20ry%3D%275.29%27%2F%3E%3Cellipse%20cx%3D%2790.4%27%20cy%3D%270.0%27%20rx%3D%272.30%27%20ry%3D%275.29%27%2F%3E%3Cellipse%20cx%3D%2796.0%27%20cy%3D%275.6%27%20rx%3D%275.29%27%20ry%3D%272.30%27%2F%3E%3Cellipse%20cx%3D%2796.0%27%20cy%3D%27-5.6%27%20rx%3D%275.29%27%20ry%3D%272.30%27%2F%3E%3Ccircle%20cx%3D%2796%27%20cy%3D%270%27%20r%3D%271.5%27%2F%3E%3Cellipse%20cx%3D%275.6%27%20cy%3D%2796.0%27%20rx%3D%272.30%27%20ry%3D%275.29%27%2F%3E%3Cellipse%20cx%3D%27-5.6%27%20cy%3D%2796.0%27%20rx%3D%272.30%27%20ry%3D%275.29%27%2F%3E%3Cellipse%20cx%3D%270.0%27%20cy%3D%27101.6%27%20rx%3D%275.29%27%20ry%3D%272.30%27%2F%3E%3Cellipse%20cx%3D%270.0%27%20cy%3D%2790.4%27%20rx%3D%275.29%27%20ry%3D%272.30%27%2F%3E%3Ccircle%20cx%3D%270%27%20cy%3D%2796%27%20r%3D%271.5%27%2F%3E%3Cellipse%20cx%3D%27101.6%27%20cy%3D%2796.0%27%20rx%3D%272.30%27%20ry%3D%275.29%27%2F%3E%3Cellipse%20cx%3D%2790.4%27%20cy%3D%2796.0%27%20rx%3D%272.30%27%20ry%3D%275.29%27%2F%3E%3Cellipse%20cx%3D%2796.0%27%20cy%3D%27101.6%27%20rx%3D%275.29%27%20ry%3D%272.30%27%2F%3E%3Cellipse%20cx%3D%2796.0%27%20cy%3D%2790.4%27%20rx%3D%275.29%27%20ry%3D%272.30%27%2F%3E%3Ccircle%20cx%3D%2796%27%20cy%3D%2796%27%20r%3D%271.5%27%2F%3E%3Ccircle%20cx%3D%2724.0%27%20cy%3D%2724.0%27%20r%3D%271.1%27%2F%3E%3Ccircle%20cx%3D%2772.0%27%20cy%3D%2724.0%27%20r%3D%271.1%27%2F%3E%3Ccircle%20cx%3D%2724.0%27%20cy%3D%2772.0%27%20r%3D%271.1%27%2F%3E%3Ccircle%20cx%3D%2772.0%27%20cy%3D%2772.0%27%20r%3D%271.1%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E")',
         band: 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27120%27%20height%3D%2728%27%20viewBox%3D%270%200%20120%2028%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23A9762F%27%20stroke-width%3D%271%27%20opacity%3D%270.5%27%3E%3Cpath%20d%3D%27M0%2014%20Q15%200%2030%2014%20Q45%2028%2060%2014%20Q75%200%2090%2014%20Q105%2028%20120%2014%27%2F%3E%3Cpath%20d%3D%27M0%2014%20Q15%2028%2030%2014%20Q45%200%2060%2014%20Q75%2028%2090%2014%20Q105%200%20120%2014%27%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%27%23A9762F%27%20opacity%3D%270.55%27%3E%3Ccircle%20cx%3D%270%27%20cy%3D%2714%27%20r%3D%272%27%2F%3E%3Ccircle%20cx%3D%2730%27%20cy%3D%2714%27%20r%3D%272%27%2F%3E%3Ccircle%20cx%3D%2760%27%20cy%3D%2714%27%20r%3D%272.6%27%2F%3E%3Ccircle%20cx%3D%2790%27%20cy%3D%2714%27%20r%3D%272%27%2F%3E%3Ccircle%20cx%3D%27120%27%20cy%3D%2714%27%20r%3D%272%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E")',      // horizontal divider between sections      
         scallop: 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2724%27%20height%3D%2714%27%20viewBox%3D%270%200%2024%2014%27%3E%3Cpath%20d%3D%27M0%201.6%20H24%27%20stroke%3D%27%23C9A24B%27%20stroke-width%3D%271%27%20fill%3D%27none%27%20opacity%3D%270.55%27%2F%3E%3Cpath%20d%3D%27M0%202%20Q6%2022%2012%202%20Q18%2022%2024%202%27%20fill%3D%27none%27%20stroke%3D%27%23C9A24B%27%20stroke-width%3D%271.35%27%2F%3E%3C%2Fsvg%3E")',
-        jewel: "linear-gradient(158deg,#FFFFFF,#FBF0EC)", // product art field
+        jewel: "linear-gradient(158deg,#FFFFFF,#FCEFF1)", // product art field
       },
       // Named layers, so nothing ever guesses a z-index. Ordered bottom to top.
       zIndex: {
         bar: "30",      // sticky filter/sort bar
-        header: "#FCF3F0", // sticky header / floating bars
+        header: "#FDF6F7", // sticky header / floating bars
         buybar: "45",   // floating buy bar (sits below the tab bar)
         tabbar: "50",   // mobile bottom navigation
         backdrop: "60",
@@ -200,12 +200,12 @@ cat > 'src/app/globals.css' <<'LOOK_FILE_END'
   --gold: #c9a24b;
   --gold-deep: #7e5a25;
   --gold-pale: #e7d3b1;
-  --rose: #d3a0a8;
-  --header: #fcf3f0;
+  --rose: #d9a8b0;
+  --header: #fdf6f7;
   --forest: #2f6b4f;
-  --beige: #fdfaf6;
-  --beige-deep: #f7e6e5;
-  --cream: #fcf4f1;
+  --beige: #fdfbfb;
+  --beige-deep: #fae3e6;
+  --cream: #fdf4f5;
   --paper: #ffffff;
   --muted: rgba(36, 28, 21, 0.68);
   --faint: rgba(36, 28, 21, 0.42);
@@ -217,40 +217,45 @@ cat > 'src/app/globals.css' <<'LOOK_FILE_END'
   /* ---------------------------------------------------------------------
      PAGE BACKGROUND
      ---------------------------------------------------------------------
-     Three layers, in paint order:
+     Measured from the silk reference, which does three things:
 
-       1. a WARM WHITE field                     #FDFAF6
-       2. two soft blush pools, low opacity      #F6DCDF / #F9E7DC
-       3. a fine lattice ornament                --texture
+       centre  #FDFBFB   essentially white,  R-B  2
+       edges   #F8CED4   clear pink,         R-B 36
+       hue     349-355   true pink, on the COOL side of red
 
-     Why not a flat pink page: a flat fill tints every pixel behind the type,
-     so the copy is always fighting it. A warm white field with blush arriving
-     as a diffuse wash reads as pink overall, while the text itself sits on
-     something close to white. That is how the packaging works too — the blush
-     is an accent, not a flood.
+     A 43-point journey from the middle of the frame to its edges. That is the
+     whole trick: the page reads unmistakably pink because of the margins,
+     while every line of type sits on near-white.
 
-     The pools are large, soft and asymmetric on purpose. Symmetric corner
-     vignettes look like smudging; an off-centre wash looks like paper.
+     An earlier build ran hue 9-22 (peach/salmon, the ORANGE side of red) with
+     only 8 points of spread. Nothing was clean white, nothing was properly
+     pink, and it read warm-orange rather than blush.
 
-     --texture governs the ornament only:
+     The washes are anchored beyond the content column, which is centred and
+     capped at 1300px. Body text therefore lands where R-B is 15 or less.
 
-       0.09  visible at a glance
-       0.055 <- current: you see it when you look for it, not before
-       0.03  effectively invisible
-
-     Contrast never drops below 13:1 anywhere on the page, so this is a taste
-     control, not a legibility one.
+     Colour   #EFAEBC  hue 352
+     Depth    each gradient runs to `transparent 100%`, not 70%. A short stop
+              makes the wash fade out before it reaches the viewport edge, so
+              the margin never gets properly pink — the first attempt at this
+              only reached R-B 17 against the reference's 36. At a full stop
+              it reaches 32.
      --------------------------------------------------------------------- */
   :root {
-    --texture: 0.055;
+    --texture: 0.05;
   }
 
   html {
-    background-color: #FDFAF6;
+    background-color: #FDFBFB;
+
+    /* Four washes: a broad sweep down each side, plus softer corner blooms.
+       Asymmetric on purpose — a symmetric vignette looks like a lens artefact,
+       an uneven wash looks like fabric. */
     background-image:
-      radial-gradient(ellipse 80% 55% at 78% 0%,   rgba(246,220,223,.62), transparent 68%),
-      radial-gradient(ellipse 70% 50% at 12% 34%,  rgba(249,231,220,.50), transparent 66%),
-      radial-gradient(ellipse 95% 45% at 50% 100%, rgba(246,220,223,.55), transparent 70%);
+      radial-gradient(ellipse 38% 86% at -8% 30%,  #EFAEBC, transparent 100%),
+      radial-gradient(ellipse 36% 82% at 108% 68%, #EFAEBC, transparent 100%),
+      radial-gradient(ellipse 48% 34% at 88% -6%,  rgba(239,174,188,.72), transparent 100%),
+      radial-gradient(ellipse 54% 36% at 14% 106%, rgba(239,174,188,.78), transparent 100%);
     background-attachment: fixed;
   }
 
@@ -260,8 +265,8 @@ cat > 'src/app/globals.css' <<'LOOK_FILE_END'
     overflow-x: hidden;
   }
 
-  /* Ornament sits at z-index -1: above the washes, below every element.
-     pointer-events:none so it can never intercept a click. */
+  /* Ornament: above the washes, below every element. pointer-events:none so
+     it can never intercept a click. */
   body::before {
     content: "";
     position: fixed;
@@ -274,9 +279,17 @@ cat > 'src/app/globals.css' <<'LOOK_FILE_END'
     opacity: var(--texture);
   }
 
-  /* A fixed layer repaints on every scroll frame on iOS, so let both scroll. */
+  /* A fixed layer repaints on every scroll frame on iOS.
+     Narrow screens also get tighter washes — a 34%-wide gradient that reads as
+     an elegant margin on a desktop covers a third of a phone. */
   @media (max-width: 640px) {
-    html { background-attachment: scroll; }
+    html {
+      background-attachment: scroll;
+      background-image:
+        radial-gradient(ellipse 50% 42% at -12% 8%,  rgba(239,174,188,.92), transparent 100%),
+        radial-gradient(ellipse 48% 40% at 112% 52%, rgba(239,174,188,.90), transparent 100%),
+        radial-gradient(ellipse 64% 32% at 20% 102%, rgba(239,174,188,.80), transparent 100%);
+    }
     body::before { position: absolute; background-size: 84px 84px; }
   }
 
@@ -476,7 +489,7 @@ export default function Header({ verticals }: { verticals: NavVertical[] }) {
   const [mega, setMega] = useState<string | null>(null);
 
   return (
-    <header className="sticky top-0 z-header border-b border-line bg-[#FCF3F0]/95 backdrop-blur-md">
+    <header className="sticky top-0 z-header border-b border-line bg-[#FDF6F7]/95 backdrop-blur-md">
       <div className={cx(wrap, "flex h-16 items-center gap-2")}>
         <button onClick={ui.openMenu} aria-label="Open menu" className={cx(iconBtn, "lg:hidden")}>
           <Icon name="menu" />
@@ -692,7 +705,7 @@ export default function AddToCart({ product }: { product: FullProduct }) {
           {/* Floating buy bar, mobile only. */}
           <div className={cx(
             "fixed inset-x-0 bottom-0 z-buybar flex items-center gap-2.5 border-t border-line-gold",
-            "bg-[#FCF3F0]/97 px-4 pb-[calc(0.625rem+env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-md transition-transform duration-300 ease-silk lg:hidden",
+            "bg-[#FDF6F7]/97 px-4 pb-[calc(0.625rem+env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-md transition-transform duration-300 ease-silk lg:hidden",
             showBar ? "translate-y-0" : "translate-y-[130%]"
           )}>
             <div className="flex-none">
@@ -979,7 +992,7 @@ export default function CheckoutForm({
       </div>
 
       {/* Sticky pay bar, mobile only. Sits above the tab bar, never under it. */}
-      <div className="fixed inset-x-0 bottom-0 z-buybar flex items-center gap-2.5 border-t border-line-gold bg-[#FCF3F0]/97 px-4 pb-[calc(0.625rem+env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-md lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-buybar flex items-center gap-2.5 border-t border-line-gold bg-[#FDF6F7]/97 px-4 pb-[calc(0.625rem+env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-md lg:hidden">
         <div className="flex-none">
           <b className="block text-base text-maroon">{formatINR(total)}</b>
           <span className="text-[10px] text-muted">{shipping ? "incl. shipping" : "free shipping"}</span>
@@ -1095,7 +1108,7 @@ export function FilterBar({ categories }: { categories: Cat[] }) {
 
   return (
     <>
-      <div className="sticky top-16 z-bar flex gap-2.5 border-b border-line bg-[#FCF3F0]/96 py-2.5 backdrop-blur-md lg:hidden">
+      <div className="sticky top-16 z-bar flex gap-2.5 border-b border-line bg-[#FDF6F7]/96 py-2.5 backdrop-blur-md lg:hidden">
         <button onClick={ui.openFilter} className={barBtn}>
           Filter {active > 0 && <span className="h-1.5 w-1.5 rounded-full bg-maroon" />}
         </button>
@@ -1247,21 +1260,23 @@ cat <<FINAL
     Mobile bottom bar    gone. Search, saved and bag stay in the header;
                          collections stay in the menu drawer.
 
-    Field             #FDFAF6  warm white, faintly beige
-    Blush pools       #F6DCDF and #F9E7DC, soft and off-centre
-                      (asymmetric on purpose - symmetric corner vignettes
-                       look like smudging, an off-centre wash looks like paper)
-    Ornament          fine 96px lattice with a quatrefoil at each node,
-                      #D3A0A8, drift 5
+    Centre / field    #FDFBFB  near-white, R-B 2   (reference: R-B 2)
+    Margins           #F4CBD4  clear pink, R-B 32  (reference: R-B 36)
+    Wash colour       #EFAEBC  hue 352, cool side of red
+    Ornament          fine 96px lattice, quatrefoil nodes, drift 5
     Cards / panels    #FFFFFF  so product photography reads true
-    Footer            #F7E6E5  blush deepens toward the foot of the page
-    Header            #FCF3F0
+    Footer            #FAE3E6
+    Header            #FDF6F7
     Maroon and gold   unchanged
 
-  CONTRAST  (worst case = text on the deepest pool WITH an ornament line)
+    Mobile gets its own, tighter washes: a 38%-wide gradient reads as an
+    elegant margin on a desktop but swallows a third of a phone screen.
 
-    body text   13.6:1     maroon 7.3:1     gold labels 5.1:1
-    Minimum anywhere is 5.05:1 against the 4.5:1 requirement.
+  CONTRAST  (the content column is centred and capped at 1300px, so text
+             never reaches the deep margins)
+
+    body text 14.3:1    maroon 7.6:1    gold labels 5.3:1
+    Worst case anywhere text appears: 5.29:1 against a 4.5:1 requirement.
 
   TUNING THE PATTERN
 
@@ -1269,16 +1284,15 @@ cat <<FINAL
 
         :root { --texture: 0.09; }
 
-        0.09   visible at a glance
-        0.055  current - you see it when you look for it, not before
-        0.03   effectively invisible
+        0.09  visible at a glance
+        0.05  current - you see it when you look for it, not before
+        0.03  effectively invisible
 
-    Contrast never drops below 13:1 for body text at any of these, so it is a
-    taste control rather than a legibility one.
-
-    To change how pink the page reads, edit the three radial-gradient lines in
-    the html block just above --texture. The .62 / .50 / .55 alphas control
-    the depth of each pool. Change it, then: npx next build && sudo systemctl restart shehnai
+    To change how pink the MARGINS read, edit #EFAEBC in the four
+    radial-gradient lines in the html block. Note they end at
+    `transparent 100%`, not 70% - a short stop makes the wash fade out before
+    it reaches the viewport edge, which is why an earlier attempt only got
+    halfway to the reference depth. Change it, then: npx next build && sudo systemctl restart shehnai
 
   UNDO
 
