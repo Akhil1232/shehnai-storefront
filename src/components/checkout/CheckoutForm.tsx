@@ -23,6 +23,24 @@ type Form = {
 };
 const EMPTY: Form = { name: "", phone: "", email: "", pincode: "", city: "", state: "", line1: "", line2: "" };
 
+/* Must live outside CheckoutForm — a component defined inside another
+ * component's body is a new function identity on every render, which makes
+ * React unmount/remount the underlying <input> on every keystroke and closes
+ * the on-screen keyboard on mobile. */
+function Field({ k, label, err, value, bad, onChange, ...rest }: {
+  k: keyof Form; label: string; err?: string; value: string; bad: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
+  return (
+    <div>
+      <label htmlFor={`f-${k}`} className={labelCls}>{label}</label>
+      <input id={`f-${k}`} value={value} onChange={onChange}
+             className={cx(input, bad && inputError)} {...rest} />
+      {bad && err && <span className="mt-1 block text-[11.5px] text-maroon">{err}</span>}
+    </div>
+  );
+}
+
 const CHECKS: [keyof Form, (v: string) => boolean, string][] = [
   ["name", (v) => v.trim().length > 1, "Please enter your name"],
   ["phone", (v) => /^[6-9]\d{9}$/.test(v.replace(/\D/g, "")), "Enter a valid 10-digit mobile number"],
@@ -190,17 +208,6 @@ export default function CheckoutForm({
     );
   }
 
-  const Field = ({ k, label, err, ...rest }: {
-    k: keyof Form; label: string; err?: string;
-  } & React.InputHTMLAttributes<HTMLInputElement>) => (
-    <div>
-      <label htmlFor={`f-${k}`} className={labelCls}>{label}</label>
-      <input id={`f-${k}`} value={f[k]} onChange={set(k)}
-             className={cx(input, bad.has(k) && inputError)} {...rest} />
-      {bad.has(k) && err && <span className="mt-1 block text-[11.5px] text-maroon">{err}</span>}
-    </div>
-  );
-
   const block = "mb-4 rounded border border-line bg-paper p-4.5";
   const blockTitle = "mb-3.5 flex items-center gap-2.5 text-[11px] font-extrabold uppercase tracking-[0.13em]";
   const stepDot = "grid h-[22px] w-[22px] flex-none place-items-center rounded-full bg-maroon text-[11px] not-italic text-white";
@@ -219,11 +226,14 @@ export default function CheckoutForm({
             <div className={block}>
               <div className={blockTitle}><i className={stepDot}>1</i>Contact</div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <Field k="name" label="Full name" autoComplete="name" placeholder="Your name" err={CHECKS[0][2]} />
-                <Field k="phone" label="Mobile number" inputMode="numeric" maxLength={10}
+                <Field k="name" label="Full name" value={f.name} bad={bad.has("name")} onChange={set("name")}
+                       autoComplete="name" placeholder="Your name" err={CHECKS[0][2]} />
+                <Field k="phone" label="Mobile number" value={f.phone} bad={bad.has("phone")} onChange={set("phone")}
+                       inputMode="numeric" maxLength={10}
                        autoComplete="tel" placeholder="10-digit number" err={CHECKS[1][2]} />
                 <div className="sm:col-span-2">
-                  <Field k="email" label="Email" type="email" autoComplete="email"
+                  <Field k="email" label="Email" value={f.email} bad={bad.has("email")} onChange={set("email")}
+                         type="email" autoComplete="email"
                          placeholder="For your order confirmation" err={CHECKS[2][2]} />
                 </div>
               </div>
@@ -249,7 +259,8 @@ export default function CheckoutForm({
                     </span>
                   )}
                 </div>
-                <Field k="city" label="City" autoComplete="address-level2" placeholder="Auto-filled from PIN" />
+                <Field k="city" label="City" value={f.city} bad={bad.has("city")} onChange={set("city")}
+                       autoComplete="address-level2" placeholder="Auto-filled from PIN" />
                 <div className="sm:col-span-2">
                   <label htmlFor="f-line1" className={labelCls}>Flat / house no., building, street</label>
                   <input id="f-line1" ref={line1Ref} value={f.line1} onChange={set("line1")}
@@ -257,8 +268,10 @@ export default function CheckoutForm({
                          className={cx(input, bad.has("line1") && inputError)} />
                   {bad.has("line1") && <span className="mt-1 block text-[11.5px] text-maroon">{CHECKS[4][2]}</span>}
                 </div>
-                <Field k="line2" label="Area / landmark (optional)" autoComplete="address-line2" />
-                <Field k="state" label="State" autoComplete="address-level1" placeholder="Auto-filled from PIN" />
+                <Field k="line2" label="Area / landmark (optional)" value={f.line2} bad={bad.has("line2")} onChange={set("line2")}
+                       autoComplete="address-line2" />
+                <Field k="state" label="State" value={f.state} bad={bad.has("state")} onChange={set("state")}
+                       autoComplete="address-level1" placeholder="Auto-filled from PIN" />
               </div>
             </div>
 
