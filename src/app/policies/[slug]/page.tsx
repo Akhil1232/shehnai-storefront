@@ -43,7 +43,6 @@ const POLICIES: Record<string, Policy> = {
         heading: "Shipping charges",
         body: [
           "Shipping is free on orders above the threshold shown at checkout. Below it, a flat shipping charge applies and is displayed before you pay.",
-          "Cash on Delivery is available on most PIN codes. If your PIN code is not serviceable for COD, the option will not appear at checkout.",
         ],
       },
       {

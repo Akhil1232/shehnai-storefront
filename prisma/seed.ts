@@ -322,7 +322,6 @@ async function main() {
     announcement: "Free pan-India shipping over ₹999 · New: The Kundan Bridal Edit is live",
     freeShippingThresholdPaise: 99900,
     flatShippingPaise: 9900,
-    codEnabled: true,
     supportEmail: "care@shehnai.in",
   };
   for (const [key, value] of Object.entries(settings)) {

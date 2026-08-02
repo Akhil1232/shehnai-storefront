@@ -50,7 +50,7 @@ export default function Footer({
 
       <div className={cx(wrap, "flex flex-wrap justify-between gap-3 border-t border-line py-4 text-[11.5px] text-muted")}>
         <span>&copy; {new Date().getFullYear()} Shehnai&reg; &middot; Ethnic Accessories</span>
-        <span>UPI &middot; Cards &middot; Net Banking &middot; Wallets &middot; COD</span>
+        <span>UPI &middot; Cards &middot; Net Banking &middot; Wallets</span>
       </div>
     </footer>
   );

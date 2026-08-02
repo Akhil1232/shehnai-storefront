@@ -51,7 +51,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const usp: [IconName, string][] = [
     ["truck", "Dispatch in 2–3 days"],
     ["swap", "Replacement support"],
-    ["cash", "COD available"],
+    ["cash", "Secure payments"],
   ];
 
   return (

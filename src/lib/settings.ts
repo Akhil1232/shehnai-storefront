@@ -8,8 +8,6 @@ export type SiteSettings = {
   announcement: string;
   freeShippingThresholdPaise: number;
   flatShippingPaise: number;
-  codFeePaise: number;
-  codEnabled: boolean;
   supportEmail: string;
   supportPhone: string;
   whatsapp: string;
@@ -21,8 +19,6 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     "Free pan-India shipping over ₹999 · New: The Kundan Bridal Edit is live",
   freeShippingThresholdPaise: 99900,
   flatShippingPaise: 9900,
-  codFeePaise: 0,
-  codEnabled: true,
   supportEmail: "care@shehnai.in",
   supportPhone: "+91 00000 00000",
   whatsapp: "https://wa.me/910000000000",

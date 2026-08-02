@@ -29,8 +29,7 @@ export default function PincodeCheck() {
         return;
       }
       const where = [data.city, data.state].filter(Boolean).join(", ");
-      const cod = data.codAvailable ? "Cash on Delivery available." : "Prepaid orders only for this PIN code.";
-      setMsg({ ok: true, text: `Delivers to ${where || v}. ${cod}` });
+      setMsg({ ok: true, text: `Delivers to ${where || v}.` });
     } catch {
       setMsg({ ok: false, text: "Could not check delivery availability right now." });
     } finally {

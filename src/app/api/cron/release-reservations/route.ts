@@ -25,13 +25,10 @@ export async function GET(req: Request) {
 
   const cutoff = new Date(Date.now() - STALE_MINUTES * 60_000);
 
-  // COD orders are confirmed immediately, so only unpaid online checkouts
-  // can be stale here.
   const stale = await prisma.order.findMany({
     where: {
       status: "PENDING",
       paymentStatus: "PENDING",
-      paymentMethod: "RAZORPAY",
       createdAt: { lt: cutoff },
     },
     include: { items: true },

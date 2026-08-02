@@ -391,7 +391,6 @@ export async function shipWithDelhivery(formData: FormData) {
 
   const { waybill } = await createShipment({
     orderNumber: order.orderNumber,
-    paymentMethod: order.paymentMethod,
     totalPaise: order.totalPaise,
     address,
     items: order.items.map((i) => ({ productName: i.productName, qty: i.qty })),
@@ -439,8 +438,6 @@ export async function saveSettings(formData: FormData) {
     announcement: str(formData, "announcement") ?? "",
     freeShippingThresholdPaise: paise(formData, "freeShippingThreshold") ?? 0,
     flatShippingPaise: paise(formData, "flatShipping") ?? 0,
-    codFeePaise: paise(formData, "codFee") ?? 0,
-    codEnabled: bool(formData, "codEnabled"),
     supportEmail: str(formData, "supportEmail") ?? "",
     supportPhone: str(formData, "supportPhone") ?? "",
     whatsapp: str(formData, "whatsapp") ?? "",

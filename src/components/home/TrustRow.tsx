@@ -4,7 +4,7 @@ const ITEMS: [IconName, string, string][] = [
   ["shield", "Premium Quality", "Checked before packing"],
   ["truck", "Dispatch in 2–3 Days", "Tracking shared on dispatch"],
   ["swap", "Replacement Support", "With an unboxing video"],
-  ["cash", "Cash on Delivery", "On most PIN codes"],
+  ["cash", "Secure Payments", "UPI · Cards · Wallets"],
 ];
 
 export default function TrustRow() {

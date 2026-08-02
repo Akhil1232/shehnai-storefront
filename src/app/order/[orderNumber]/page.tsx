@@ -28,8 +28,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderNum
 
         <h1 className="text-h1">Thank you — your order is confirmed</h1>
         <p className="mb-1 mt-2.5 text-[13.5px] text-muted">
-          Order <b className="text-ink">{order.orderNumber}</b> ·{" "}
-          {order.paymentMethod === "COD" ? "Cash on Delivery" : "Paid online"}
+          Order <b className="text-ink">{order.orderNumber}</b> · Paid online
         </p>
         <p className="text-[13.5px] text-muted">
           A confirmation is on its way to {order.email}. Dispatched within 2–3 working days.

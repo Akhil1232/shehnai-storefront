@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/auth";
 import { getSettings } from "@/lib/settings";
 import { saveSettings } from "../actions";
-import { Card, Field, TextArea, Checkbox, SubmitButton } from "@/components/admin/ui";
+import { Card, Field, TextArea, SubmitButton } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -18,13 +18,11 @@ export default async function SettingsPage() {
             hint="Leave blank to hide the maroon bar at the top of the site." />
         </Card>
 
-        <Card title="Shipping & COD">
+        <Card title="Shipping">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Free shipping above (₹)" name="freeShippingThreshold" type="number" defaultValue={s.freeShippingThresholdPaise / 100} />
             <Field label="Flat shipping charge (₹)" name="flatShipping" type="number" defaultValue={s.flatShippingPaise / 100} />
-            <Field label="COD handling fee (₹)" name="codFee" type="number" defaultValue={s.codFeePaise / 100} />
           </div>
-          <Checkbox label="Cash on delivery available" name="codEnabled" defaultChecked={s.codEnabled} />
         </Card>
 
         <Card title="Contact">

@@ -8,7 +8,6 @@ export const runtime = "nodejs";
 type Body = {
   items: { variantId: string; qty: number }[];
   pincode: string;
-  paymentMethod: "RAZORPAY" | "COD";
 };
 
 /**
@@ -47,7 +46,6 @@ export async function POST(req: Request) {
       subtotalPaise,
       weightGrams: weightGrams || 500,
       pincode,
-      paymentMethod: body.paymentMethod === "COD" ? "COD" : "RAZORPAY",
       settings,
     });
 

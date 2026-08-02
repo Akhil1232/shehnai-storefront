@@ -311,7 +311,6 @@ enum OrderStatus {
 
 enum PaymentMethod {
   RAZORPAY
-  COD
 }
 
 enum PaymentStatus {

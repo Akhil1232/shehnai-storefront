@@ -16,7 +16,6 @@ type Body = {
     name: string; phone: string; line1: string; line2?: string;
     city: string; state: string; pincode: string;
   };
-  paymentMethod: "RAZORPAY" | "COD";
   couponCode?: string;
 };
 
@@ -33,9 +32,6 @@ export async function POST(req: Request) {
     }
 
     const settings = await getSettings();
-    if (body.paymentMethod === "COD" && !settings.codEnabled) {
-      return NextResponse.json({ error: "Cash on delivery is unavailable." }, { status: 400 });
-    }
 
     const variants = await prisma.productVariant.findMany({
       where: { id: { in: body.items.map((i) => i.variantId) }, isActive: true },
@@ -95,7 +91,6 @@ export async function POST(req: Request) {
       subtotalPaise: subtotalPaise - discountPaise,
       weightGrams,
       pincode: body.address.pincode,
-      paymentMethod: body.paymentMethod,
       settings,
     });
     if (!shipQuote.serviceable) {
@@ -104,16 +99,9 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-    if (body.paymentMethod === "COD" && !shipQuote.codAvailable) {
-      return NextResponse.json(
-        { error: "Cash on Delivery isn't available for this PIN code. Please pay online instead." },
-        { status: 400 }
-      );
-    }
 
     const shippingPaise = shipQuote.shippingPaise;
-    const codFee = body.paymentMethod === "COD" ? settings.codFeePaise : 0;
-    const totalPaise = subtotalPaise - discountPaise + shippingPaise + codFee;
+    const totalPaise = subtotalPaise - discountPaise + shippingPaise;
 
     // --- persist ---------------------------------------------------------
     const todayCount = await prisma.order.count({
@@ -130,12 +118,12 @@ export async function POST(req: Request) {
           orderNumber: number,
           email: body.email,
           phone: body.phone,
-          paymentMethod: body.paymentMethod,
+          paymentMethod: "RAZORPAY",
           paymentStatus: "PENDING",
           status: "PENDING",
           subtotalPaise,
           discountPaise,
-          shippingPaise: shippingPaise + codFee,
+          shippingPaise,
           totalPaise,
           couponCode: body.couponCode ?? null,
           shippingAddress: body.address,
@@ -143,15 +131,6 @@ export async function POST(req: Request) {
         },
       });
     });
-
-    // --- COD stops here; nothing to charge -------------------------------
-    if (body.paymentMethod === "COD") {
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { status: "CONFIRMED" },
-      });
-      return NextResponse.json({ orderNumber: order.orderNumber, cod: true });
-    }
 
     // --- Razorpay --------------------------------------------------------
     const rzOrder = await razorpay().orders.create({

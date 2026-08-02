@@ -36,7 +36,6 @@ function authHeaders() {
 
 export type ServiceabilityResult = {
   serviceable: boolean;
-  codAvailable: boolean;
   prepaidAvailable: boolean;
   city?: string;
   state?: string;
@@ -51,11 +50,10 @@ export async function checkServiceability(pincode: string): Promise<Serviceabili
 
   const data = await res.json();
   const row = data?.delivery_codes?.[0]?.postal_code;
-  if (!row) return { serviceable: false, codAvailable: false, prepaidAvailable: false };
+  if (!row) return { serviceable: false, prepaidAvailable: false };
 
   return {
     serviceable: true,
-    codAvailable: row.cod === "Y",
     prepaidAvailable: row.pre_paid === "Y",
     city: row.city,
     state: row.state_code,
@@ -66,7 +64,6 @@ export async function checkServiceability(pincode: string): Promise<Serviceabili
 
 export type CreateShipmentInput = {
   orderNumber: string;
-  paymentMethod: "RAZORPAY" | "COD";
   totalPaise: number;
   address: {
     name: string;
@@ -104,9 +101,9 @@ export async function createShipment(input: CreateShipmentInput): Promise<Create
     country: "India",
     phone: input.address.phone,
     order: input.orderNumber,
-    payment_mode: input.paymentMethod === "COD" ? "COD" : "Prepaid",
+    payment_mode: "Prepaid",
     products_desc: input.items.map((i) => `${i.productName} x${i.qty}`).join(", ").slice(0, 500),
-    cod_amount: input.paymentMethod === "COD" ? amountRupees : "0",
+    cod_amount: "0",
     total_amount: amountRupees,
     weight: String(input.weightGrams ?? 500),
     shipping_mode: "Surface",
@@ -156,7 +153,6 @@ export type TrackingStatus = {
 export type FreightChargeInput = {
   destinationPincode: string;
   weightGrams: number;
-  paymentMode: "COD" | "Prepaid";
 };
 
 /**
@@ -176,7 +172,7 @@ export async function getFreightCharge(input: FreightChargeInput): Promise<numbe
     o_pin: originPincode,
     d_pin: input.destinationPincode,
     cgm: String(input.weightGrams),
-    pt: input.paymentMode,
+    pt: "Prepaid",
   });
   const clientName = process.env.DELHIVERY_CLIENT_NAME;
   if (clientName) params.set("cl", clientName);

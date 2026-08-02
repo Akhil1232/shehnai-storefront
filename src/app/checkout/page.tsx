@@ -15,8 +15,6 @@ export default async function CheckoutPage() {
     <CheckoutForm
       freeShippingAt={s.freeShippingThresholdPaise}
       flatShipping={s.flatShippingPaise}
-      codEnabled={s.codEnabled}
-      codFee={s.codFeePaise}
     />
   );
 }
