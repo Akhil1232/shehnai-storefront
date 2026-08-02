@@ -186,7 +186,11 @@ export async function getFreightCharge(input: FreightChargeInput): Promise<numbe
   const data = await res.json().catch(() => null);
   const row = Array.isArray(data) ? data[0] : data;
   const amount = row?.total_amount ?? row?.charge_total ?? row?.gross_amount;
-  return typeof amount === "number" ? Math.round(amount * 100) : null;
+  // A real courier charge is never ₹0 — a zero here means the rate card has no
+  // entry for this zone (contract gap on Delhivery's side), not a genuine free
+  // rate. Treat it as "no quote" so callers fall back to the flat rate instead
+  // of accidentally shipping for free.
+  return typeof amount === "number" && amount > 0 ? Math.round(amount * 100) : null;
 }
 
 export async function trackShipment(waybill: string): Promise<TrackingStatus | null> {
